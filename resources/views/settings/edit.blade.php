@@ -41,6 +41,19 @@
     </div>
 
     <div class="bg-white shadow-md rounded-lg p-6 mt-6">
+        <h2 class="text-xl font-bold mb-4">データエクスポート</h2>
+        <p class="text-gray-700 mb-4">
+            あなたのBluelogに保存されている投稿データをCSV形式でエクスポートします。
+        </p>
+        <form action="{{ route('settings.exportPosts') }}" method="POST">
+            @csrf
+            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                投稿データをエクスポート
+            </button>
+        </form>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg p-6 mt-6">
         <h2 class="text-xl font-bold mb-4 text-red-600">アカウント削除</h2>
         <p class="text-gray-700 mb-4">
             この操作は元に戻せません。アカウントを削除すると、あなたのBluelog上の全てのデータ（投稿、いいね、統計など）が完全に削除されます。

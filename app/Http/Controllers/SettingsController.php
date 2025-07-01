@@ -6,6 +6,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\BlueskyController;
+use App\Models\Post;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use App\Providers\AppServiceProvider;
+use League\Csv\Writer;
 
 class SettingsController extends Controller
 {
@@ -30,7 +34,7 @@ class SettingsController extends Controller
      * 認証済みユーザーのモデルを更新して保存します。
      *
      * @param  \Illuminate\Http\Request  $request HTTPリクエストオブジェクト。
-     * @return \Illuminate\Http\RedirectResponse 設定更新後のリダイレクトレスポンス。
+     * @return \Illuminate\Http\RedirectResponse 設定更新後のリダイレクトレスポポンス。
      */
     public function update(Request $request)
     {
@@ -74,4 +78,59 @@ class SettingsController extends Controller
 
         return redirect('/')->with('status', 'アカウントが削除されました。');
     }
+
+    /**
+     * 認証済みユーザーの投稿データをCSV形式でエクスポートします。
+     *
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
+     */
+    public function exportPosts(): StreamedResponse
+    {
+        $user = Auth::user();
+        $filename = sprintf(
+            'bluelog_posts_%s_%s.csv',
+            $user->handle,
+            now()->format('Ymd_His')
+        );
+
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function () use ($user) {
+            $csv = Writer::createFromPath('php://output', 'w');
+            $csv->setOutputBOM(Writer::BOM_UTF8);
+            $csv->setDelimiter(',');
+            $csv->setEnclosure('"');
+
+            // ヘッダー行
+            $csv->insertOne(['CID', 'URL', '投稿日時', '本文']);
+
+            // 投稿データをチャンクで取得し、処理
+            Post::where('did', $user->did)
+                ->orderBy('posted_at', 'desc')
+                ->chunk(1000, function ($posts) use ($csv) {
+                    foreach ($posts as $post) {
+                        $bluesky_url = 'https://bsky.app/profile/' . $post->did . '/post/' . $post->rkey;
+                        $text = AppServiceProvider::renderBlueskyText($post->text);
+                        // HTMLタグを除去
+                        $text = strip_tags($text);
+                        // 改行コードを統一
+                        $text = str_replace(["\r\n", "\r"], "\n", $text);
+
+                        $csv->insertOne([
+                            $post->cid,
+                            $bluesky_url,
+                            $post->posted_at->format('Y-m-d H:i:s'),
+                            $text,
+                        ]);
+                    }
+                });
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }
+

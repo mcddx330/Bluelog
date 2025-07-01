@@ -24,5 +24,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
     Route::delete('/settings', [SettingsController::class, 'destroy'])->name('settings.destroy');
-    Route::post('/logout', [BlueskyController::class, 'doLogout'])->name('logout');
+    Route::post('/settings/export-posts', [SettingsController::class, 'exportPosts'])->name('settings.exportPosts');
+
+Route::post('/logout', [BlueskyController::class, 'doLogout'])->name('logout');
 });
