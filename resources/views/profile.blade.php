@@ -26,7 +26,8 @@
             </div>
         @endif
 
-        <div class="relative h-48 bg-cover bg-center rounded-lg overflow-hidden shadow-md" style="background-image: url('{{ $profile['banner'] ?? 'https://via.placeholder.com/800x200?text=No+Banner+Image' }}');">
+        <div class="relative h-48 bg-cover bg-center rounded-lg overflow-hidden shadow-md"
+             style="background-image: url('{{ $profile['banner'] ?? 'https://via.placeholder.com/800x200?text=No+Banner+Image' }}');">
             <div class="absolute inset-0 bg-black bg-opacity-50 p-6 flex flex-col justify-end text-white">
                 <div class="flex items-center space-x-4">
                     @if(isset($profile['avatar']))
@@ -39,7 +40,8 @@
                             </a>
                         </h2>
                         <p class="text-gray-300">
-                            <a href="https://bsky.app/profile/{{ $profile['handle'] }}" target="_blank" class="text-gray-300 hover:underline">
+                            <a href="https://bsky.app/profile/{{ $profile['handle'] }}" target="_blank"
+                               class="text-gray-300 hover:underline">
                                 {{ "@". $profile['handle'] }}
                             </a>
                         </p>
@@ -103,170 +105,195 @@
         <p>No profile data available.</p>
     @endif
 
-    <div class="mt-8 bg-white shadow-md rounded-lg p-6">
-        <h2 class="text-xl font-bold mb-4">投稿ヒートマップ</h2>
-        <div id="heatmap-container" class="flex flex-wrap gap-1">
-            <!-- Heatmap cells will be generated here -->
-        </div>
-        <div id="heatmap-tooltip" class="absolute bg-gray-800 text-white text-xs p-2 rounded-md shadow-lg hidden z-50"></div>
-    </div>
-
-    <div class="mt-8 bg-white shadow-md rounded-lg p-6">
-        <h2 class="text-xl font-bold mb-4">投稿検索</h2>
-        <form action="{{ route('profile.show', ['handle' => $handle]) }}" method="GET" class="flex items-center space-x-2">
-            <input type="hidden" name="sort" value="{{ request('sort') }}">
-            <input type="text" name="search_text" placeholder="投稿を検索..."
-                   class="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                   value="{{ request('search_text') }}">
-            <button type="submit"
-                    class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                検索
-            </button>
-            @if(request('search_text'))
-                <a href="{{ route('profile.show', ['handle' => $handle, 'sort' => request('sort')]) }}"
-                   class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500">
-                    クリア
-                </a>
-            @endif
-        </form>
-    </div>
-
-    <div class="mt-8 bg-white shadow-md rounded-lg p-6">
-        <h2 class="text-xl font-bold mb-4">並び替え</h2>
-        <div class="flex flex-wrap gap-2">
-            @php
-                $currentSort = request('sort', 'posted_at_desc');
-                $queryParams = request()->except(['sort', 'page']);
-            @endphp
-            <a href="{{ route('profile.show', array_merge($queryParams, ['handle' => $handle, 'sort' => 'posted_at_desc'])) }}"
-               class="px-4 py-2 rounded-md {{ $currentSort === 'posted_at_desc' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800' }}">
-                全て降順
-            </a>
-            <a href="{{ route('profile.show', array_merge($queryParams, ['handle' => $handle, 'sort' => 'posted_date_only_asc'])) }}"
-               class="px-4 py-2 rounded-md {{ $currentSort === 'posted_date_only_asc' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800' }}">
-                全て降順 (朝から夜)
-            </a>
-            <a href="{{ route('profile.show', array_merge($queryParams, ['handle' => $handle, 'sort' => 'posted_at_asc'])) }}"
-               class="px-4 py-2 rounded-md {{ $currentSort === 'posted_at_asc' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800' }}">
-                全て昇順
-            </a>
-        </div>
-    </div>
-
-    @if(isset($archives) && count($archives) > 0)
-        <div class="mt-8 bg-white shadow-md rounded-lg p-6">
-            <h2 class="text-xl font-bold mb-4">アーカイブ</h2>
-            <div class="flex flex-wrap gap-2">
-                @foreach($archives as $archive)
-                    <a href="{{ route('profile.show', ['handle' => $handle, 'archive_ym' => $archive['ym']]) }}"
-                       class="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded hover:bg-blue-200">
-                        {{ $archive['label'] }}
-                    </a>
-                @endforeach
-            </div>
-        </div>
-    @endif
-
-    @if(isset($top_mentions) && $top_mentions->count() > 0)
-        <div class="mt-8 bg-white shadow-md rounded-lg p-6">
-            <h2 class="text-xl font-bold mb-4">メンション</h2>
-            <ul class="list-disc pl-5">
-                @foreach($top_mentions as $mention)
-                    <li>
-                        <a href="https://bsky.app/profile/{{ $mention->reply_to_handle }}" target="_blank"
-                           class="text-blue-500 hover:underline">
-                            {{ "@". $mention->reply_to_handle }}
-                        </a>
-                        ({{ number_format($mention->mention_count) }} 回)
-                    </li>
-                @endforeach
-            </ul>
-            <div class="mt-4">
-                <a href="{{ route('profile.friends', ['handle' => $handle]) }}" class="text-blue-500 hover:underline">
-                    全メンションランキングを見る
-                </a>
-            </div>
-        </div>
-    @endif
-
-    @if(isset($top_hashtags) && $top_hashtags->count() > 0)
-        <div class="mt-8 bg-white shadow-md rounded-lg p-6">
-            <h2 class="text-xl font-bold mb-4">ハッシュタグ</h2>
-            <ul class="list-disc pl-5">
-                @foreach($top_hashtags as $hashtag)
-                    <li>
-                        <a href="https://bsky.app/search?q=%23{{ $hashtag->tag }}" target="_blank" class="text-blue-500 hover:underline">
-                            #{{ $hashtag->tag }}
-                        </a>
-                        ({{ number_format($hashtag->count) }} 回)
-                    </li>
-                @endforeach
-            </ul>
-            <div class="mt-4">
-                <a href="{{ route('profile.hashtags', ['handle' => $handle]) }}" class="text-blue-500 hover:underline">
-                    全ハッシュタグランキングを見る
-                </a>
-            </div>
-        </div>
-    @endif
-
-    @if(isset($posts) && $posts->count() > 0)
-        <div class="mt-8">
-            <h2 class="text-xl font-bold mb-4">Posts</h2>
-            <div class="space-y-4">
-                @foreach($posts as $post)
-                    <div class="bg-white shadow-md rounded-lg p-4">
-                        @if($post->reply_to_handle)
-                            <p class="text-gray-500 text-sm mb-1">
-                                <a href="https://bsky.app/profile/{{ $post->reply_to_handle }}"
-                                   class="text-blue-500 hover:underline">
-                                    {{ "@". $post->reply_to_handle }}
+    <div class="lg:flex lg:space-x-8 mt-8">
+        <div class="lg:w-2/3">
+            @if(isset($posts) && $posts->count() > 0)
+                <div>
+                    <div class="space-y-4">
+                        <div class="mt-8 bg-white shadow-md rounded-lg p-6">
+                            <h2 class="text-xl font-bold mb-4">並び替え</h2>
+                            <div class="flex flex-wrap gap-2">
+                                @php
+                                    $currentSort = request('sort', 'posted_at_desc');
+                                    $queryParams = request()->except(['sort', 'page']);
+                                @endphp
+                                <a href="{{ route('profile.show', array_merge($queryParams, ['handle' => $handle, 'sort' => 'posted_at_desc'])) }}"
+                                   class="px-4 py-2 rounded-md {{ $currentSort === 'posted_at_desc' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800' }}">
+                                    全て降順
                                 </a>
-                            </p>
-                        @endif
-                        <p class="text-gray-800 text-sm mb-2 whitespace-pre-wrap">@renderBlueskyText($post->text)</p>
-                        @if($post->media->count() > 0)
-                            <div
-                                class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-{{ $post->media->count() > 2 ? '3' : $post->media->count() }} lg:grid-cols-{{ $post->media->count() > 3 ? '4' : $post->media->count() }} gap-2 mt-2">
-                                @foreach($post->media as $media)
-                                    <div class="relative">
-                                        @switch($media->type)
-                                            @case("app.bsky.embed.images")
-                                                <a href="{{ $media->fullsize_url }}" target="_blank">
-                                                    <img src="{{ $media->fullsize_url }}"
-                                                         alt="{{ $media->alt_text }}"
-                                                         class="post-image w-full h-auto rounded-lg object-cover">
+                                <a href="{{ route('profile.show', array_merge($queryParams, ['handle' => $handle, 'sort' => 'posted_date_only_asc'])) }}"
+                                   class="px-4 py-2 rounded-md {{ $currentSort === 'posted_date_only_asc' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800' }}">
+                                    全て降順 (朝から夜)
+                                </a>
+                                <a href="{{ route('profile.show', array_merge($queryParams, ['handle' => $handle, 'sort' => 'posted_at_asc'])) }}"
+                                   class="px-4 py-2 rounded-md {{ $currentSort === 'posted_at_asc' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800' }}">
+                                    全て昇順
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            {{ $posts->links() }}
+                        </div>
+
+                        @php
+                            $currentDate = null;
+                            $postsGroupedByDate = $posts->groupBy(function ($post) {
+                                return $post->posted_at->format('Y-m-d');
+                            });
+                        @endphp
+
+                        @foreach($postsGroupedByDate as $date => $dailyPosts)
+                            @php
+                                $dateObj = \Carbon\Carbon::parse($date);
+                            @endphp
+                            <h3 class="text-lg font-bold mt-6 mb-2">
+                                {{ $dateObj->format('Y年m月d日') }} ({{ $dailyPosts->count() }} posts)
+                            </h3>
+                            <div class="space-y-4">
+                                @foreach($dailyPosts as $post)
+                                    <div class="bg-white shadow-md rounded-lg p-4">
+                                        @if($post->reply_to_handle)
+                                            <p class="text-gray-500 text-sm mb-1">
+                                                <a href="https://bsky.app/profile/{{ $post->reply_to_handle }}"
+                                                   class="text-blue-500 hover:underline">
+                                                    {{ "@". $post->reply_to_handle }}
                                                 </a>
-                                                @break
-                                            @case("app.bsky.embed.video")
-                                                <video data-src="{{ $media->fullsize_url }}"
-                                                       alt="{{ $media->alt_text }}"
-                                                       controls
-                                                       class="post-video w-full h-auto rounded-lg object-cover">
-                                                </video>
-                                                @break
-                                            @default @break
-                                        @endswitch
-                                        @if($media->alt_text)
+                                            </p>
+                                        @endif
+                                        <p class="text-gray-800 text-sm mb-2 whitespace-pre-wrap">@renderBlueskyText($post->text)</p>
+                                        @if($post->media->count() > 0)
                                             <div
-                                                class="absolute bottom-0 left-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-br-lg rounded-tl-lg">
-                                                {{ $media->alt_text }}
+                                                class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-{{ $post->media->count() > 2 ? '3' : $post->media->count() }} lg:grid-cols-{{ $post->media->count() > 3 ? '4' : $post->media->count() }} gap-2 mt-2">
+                                                @foreach($post->media as $media)
+                                                    <div class="relative">
+                                                        @switch($media->type)
+                                                            @case("app.bsky.embed.images")
+                                                                <a href="{{ $media->fullsize_url }}" target="_blank">
+                                                                    <img src="{{ $media->fullsize_url }}"
+                                                                         alt="{{ $media->alt_text }}"
+                                                                         class="post-image w-full h-auto rounded-lg object-cover">
+                                                                </a>
+                                                                @break
+                                                            @case("app.bsky.embed.video")
+                                                                <video data-src="{{ $media->fullsize_url }}"
+                                                                       alt="{{ $media->alt_text }}"
+                                                                       controls
+                                                                       class="post-video w-full h-auto rounded-lg object-cover">
+                                                                </video>
+                                                                @break
+                                                            @default @break
+                                                        @endswitch
+                                                        @if($media->alt_text)
+                                                            <div
+                                                                class="absolute bottom-0 left-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-br-lg rounded-tl-lg">
+                                                                {{ $media->alt_text }}
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                @endforeach
                                             </div>
                                         @endif
+                                        <span class="text-sm text-gray-500 mt-2">{{ $post->posted_at->format('Y-m-d H:i:s') }}</span>
                                     </div>
                                 @endforeach
                             </div>
-                        @endif
-                        <span class="text-sm text-gray-500 mt-2">{{ $post->posted_at->format('Y-m-d H:i:s') }}</span>
+                        @endforeach
                     </div>
-                @endforeach
-            </div>
-            {{-- ページネーションリンク --}}
-            <div class="mt-4">
-                {{ $posts->links() }}
-            </div>
+                    <div class="mt-4">
+                        {{ $posts->links() }}
+                    </div>
+                </div>
+            @endif
         </div>
-    @endif
+
+        <div class="lg:w-1/3">
+            <div class="mt-8 bg-white shadow-md rounded-lg p-6">
+                <h2 class="text-xl font-bold mb-4">投稿検索</h2>
+                <form action="{{ route('profile.show', ['handle' => $handle]) }}" method="GET" class="flex items-center space-x-2">
+                    <input type="hidden" name="sort" value="{{ request('sort') }}">
+                    <input type="text" name="search_text" placeholder="投稿を検索..."
+                           class="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           value="{{ request('search_text') }}">
+                    <button type="submit"
+                            class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        検索
+                    </button>
+                    @if(request('search_text'))
+                        <a href="{{ route('profile.show', ['handle' => $handle, 'sort' => request('sort')]) }}"
+                           class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                            クリア
+                        </a>
+                    @endif
+                </form>
+            </div>
+
+            <div class="mt-8 bg-white shadow-md rounded-lg p-6">
+                <h2 class="text-xl font-bold mb-4">投稿ヒートマップ</h2>
+                <div id="heatmap-container" class="flex flex-wrap gap-1">
+                    <!-- Heatmap cells will be generated here -->
+                </div>
+                <div id="heatmap-tooltip" class="absolute bg-gray-800 text-white text-xs p-2 rounded-md shadow-lg hidden z-50"></div>
+            </div>
+
+            @if(isset($archives) && count($archives) > 0)
+                <div class="mt-8 bg-white shadow-md rounded-lg p-6">
+                    <h2 class="text-xl font-bold mb-4">アーカイブ</h2>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($archives as $archive)
+                            <a href="{{ route('profile.show', ['handle' => $handle, 'archive_ym' => $archive['ym']]) }}"
+                               class="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded hover:bg-blue-200">
+                                {{ $archive['label'] }}
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            @if(isset($top_mentions) && $top_mentions->count() > 0)
+                <div class="mt-8 bg-white shadow-md rounded-lg p-6">
+                    <h2 class="text-xl font-bold mb-4">メンション</h2>
+                    <ul class="list-disc pl-5">
+                        @foreach($top_mentions as $mention)
+                            <li>
+                                <a href="https://bsky.app/profile/{{ $mention->reply_to_handle }}" target="_blank"
+                                   class="text-blue-500 hover:underline">
+                                    {{ "@". $mention->reply_to_handle }}
+                                </a>
+                                ({{ number_format($mention->mention_count) }} 回)
+                            </li>
+                        @endforeach
+                    </ul>
+                    <div class="mt-4">
+                        <a href="{{ route('profile.friends', ['handle' => $handle]) }}" class="text-blue-500 hover:underline">
+                            全メンションランキングを見る
+                        </a>
+                    </div>
+                </div>
+            @endif
+
+            @if(isset($top_hashtags) && $top_hashtags->count() > 0)
+                <div class="mt-8 bg-white shadow-md rounded-lg p-6">
+                    <h2 class="text-xl font-bold mb-4">ハッシュタグ</h2>
+                    <ul class="list-disc pl-5">
+                        @foreach($top_hashtags as $hashtag)
+                            <li>
+                                <a href="https://bsky.app/search?q=%23{{ $hashtag->tag }}" target="_blank" class="text-blue-500 hover:underline">
+                                    #{{ $hashtag->tag }}
+                                </a>
+                                ({{ number_format($hashtag->count) }} 回)
+                            </li>
+                        @endforeach
+                    </ul>
+                    <div class="mt-4">
+                        <a href="{{ route('profile.hashtags', ['handle' => $handle]) }}" class="text-blue-500 hover:underline">
+                            全ハッシュタグランキングを見る
+                        </a>
+                    </div>
+                </div>
+            @endif
+        </div>
+    </div>
 </div>
 
 
