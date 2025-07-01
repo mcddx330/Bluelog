@@ -26,75 +26,77 @@
             </div>
         @endif
 
-        <div class="bg-white shadow-md rounded-lg p-6">
-            <div class="flex items-center space-x-4">
-                @if(isset($profile['avatar']))
-                    <img src="{{ $profile['avatar'] }}" alt="Avatar" class="w-16 h-16 rounded-full">
-                @endif
-                <div>
-                    <h2 class="text-xl font-semibold">
-                        <a href="{{ route('profile.show', $profile['handle']) }}">
-                            {{ $profile['display_name'] ?? $profile['handle'] }}
-                        </a>
-                    </h2>
-                    <p class="text-gray-600">
-                        <a href="https://bsky.app/profile/{{ $profile['handle'] }}" target="_blank">
-                            {{ "@". $profile['handle'] }}
-                        </a>
-                    </p>
-                </div>
-            </div>
-            <div class="mt-4">
-                <p class="text-gray-800">{!! nl2br($profile['description']) ?? '' !!}</p>
-            </div>
-            <div class="mt-4 flex space-x-4">
-                <div>
-                    <span class="font-bold">{{ $profile['followers_count'] ?? 0 }}</span>
-                    <span class="text-gray-600">Followers</span>
-                </div>
-                <div>
-                    <span class="font-bold">{{ $profile['follows_count'] ?? 0 }}</span>
-                    <span class="text-gray-600">Following</span>
-                </div>
-                <div>
-                    <span class="font-bold">{{ $profile['posts_count'] }}</span>
-                    <span class="text-gray-600">Posts</span>
-                </div>
-                <div>
-                    <a href="{{ route('profile.likes', ['handle' => $profile['handle']]) }}" class="text-blue-500 hover:underline">
-                        <span class="font-bold">Likes</span>
-                    </a>
-                </div>
-                <div>
-                    <a href="{{ route('profile.status', ['handle' => $profile['handle']]) }}" class="text-blue-500 hover:underline">
-                        <span class="font-bold">Status</span>
-                    </a>
-                </div>
-                <div>
-                    <a href="{{ route('profile.friends', ['handle' => $profile['handle']]) }}" class="text-blue-500 hover:underline">
-                        <span class="font-bold">Friends</span>
-                    </a>
-                </div>
-                <div>
-                    <a href="{{ route('profile.hashtags', ['handle' => $profile['handle']]) }}" class="text-blue-500 hover:underline">
-                        <span class="font-bold">Hashtags</span>
-                    </a>
-                </div>
-                @auth
-                    @if(Auth::user()->handle === $handle)
-                        <div>
-                            <a href="{{ route('settings.edit') }}" class="text-blue-500 hover:underline">
-                                <span class="font-bold">設定</span>
-                            </a>
-                        </div>
-                        <div>
-                            <form action="{{ route('logout') }}" method="POST" class="inline">
-                                @csrf
-                                <button type="submit" class="text-blue-500 hover:underline font-bold">ログアウト</button>
-                            </form>
-                        </div>
+        <div class="relative h-48 bg-cover bg-center rounded-lg overflow-hidden shadow-md" style="background-image: url('{{ $profile['banner'] ?? 'https://via.placeholder.com/800x200?text=No+Banner+Image' }}');">
+            <div class="absolute inset-0 bg-black bg-opacity-50 p-6 flex flex-col justify-end text-white">
+                <div class="flex items-center space-x-4">
+                    @if(isset($profile['avatar']))
+                        <img src="{{ $profile['avatar'] }}" alt="Avatar" class="w-16 h-16 rounded-full border-2 border-white">
                     @endif
-                @endauth
+                    <div>
+                        <h2 class="text-xl font-semibold">
+                            <a href="{{ route('profile.show', $profile['handle']) }}" class="text-white hover:underline">
+                                {{ $profile['display_name'] ?? $profile['handle'] }}
+                            </a>
+                        </h2>
+                        <p class="text-gray-300">
+                            <a href="https://bsky.app/profile/{{ $profile['handle'] }}" target="_blank" class="text-gray-300 hover:underline">
+                                {{ "@". $profile['handle'] }}
+                            </a>
+                        </p>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <p class="text-gray-200">{!! nl2br($profile['description']) ?? '' !!}</p>
+                </div>
+                <div class="mt-4 flex space-x-4">
+                    <div>
+                        <span class="font-bold">{{ $profile['followers_count'] ?? 0 }}</span>
+                        <span class="text-gray-300">Followers</span>
+                    </div>
+                    <div>
+                        <span class="font-bold">{{ $profile['follows_count'] ?? 0 }}</span>
+                        <span class="text-gray-300">Following</span>
+                    </div>
+                    <div>
+                        <span class="font-bold">{{ $profile['posts_count'] }}</span>
+                        <span class="text-gray-300">Posts</span>
+                    </div>
+                    <div>
+                        <a href="{{ route('profile.likes', ['handle' => $profile['handle']]) }}" class="text-blue-300 hover:underline">
+                            <span class="font-bold">Likes</span>
+                        </a>
+                    </div>
+                    <div>
+                        <a href="{{ route('profile.status', ['handle' => $profile['handle']]) }}" class="text-blue-300 hover:underline">
+                            <span class="font-bold">Status</span>
+                        </a>
+                    </div>
+                    <div>
+                        <a href="{{ route('profile.friends', ['handle' => $profile['handle']]) }}" class="text-blue-300 hover:underline">
+                            <span class="font-bold">Friends</span>
+                        </a>
+                    </div>
+                    <div>
+                        <a href="{{ route('profile.hashtags', ['handle' => $profile['handle']]) }}" class="text-blue-300 hover:underline">
+                            <span class="font-bold">Hashtags</span>
+                        </a>
+                    </div>
+                    @auth
+                        @if(Auth::user()->handle === $handle)
+                            <div>
+                                <a href="{{ route('settings.edit') }}" class="text-blue-300 hover:underline">
+                                    <span class="font-bold">設定</span>
+                                </a>
+                            </div>
+                            <div>
+                                <form action="{{ route('logout') }}" method="POST" class="inline">
+                                    @csrf
+                                    <button type="submit" class="text-blue-300 hover:underline font-bold">ログアウト</button>
+                                </form>
+                            </div>
+                        @endif
+                    @endauth
+                </div>
             </div>
         </div>
     @else

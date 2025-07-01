@@ -103,6 +103,12 @@ Blueskyには「Logged-out visibility」（ログアウトしたユーザーか�
 1.  ユーザーがIdentifierとパスワードを入力してログインする。
 2.  `com.atproto.server.createSession` を使用してBlueskyのセッションを作成し、`accessJwt` と `refreshJwt` を取得する。
 3.  取得したセッション情報を使用して `app.bsky.actor.getProfile` を呼び出し、最新のプロフィール情報を取得する。
+
+### 4.1.1. プロフィール情報の取得とバナー画像URL
+
+Blueskyアカウントのバナー画像URLは、`app.bsky.actor.getProfile` または `app.bsky.actor.getProfiles` エンドポイントを通じて取得できます。これらのエンドポイントから返されるプロフィール情報には `banner` フィールドが含まれており、これがバナー画像のURLとなります。
+
+`revolution/laravel-bluesky` パッケージを使用している場合、内部で利用されている `potibm/phluesky` クライアントを介してこの情報を取得し、`users` テーブルの `banner_url` カラムに保存します。
 4.  取得した情報（`did`, `handle`, `displayName`, `createdAt` など）とBluesky API認証トークンを `users` テーブルに `updateOrCreate` で保存・更新する。
     - `did` をキーとして、既存ユーザーか新規ユーザーかを判断する。
     - `last_login_at` を現在日時に更新する。
