@@ -134,7 +134,6 @@ class StatusController extends Controller
                 'chart_data_30'            => json_encode($chart_data_30, JSON_THROW_ON_ERROR),
                 'chart_data_60'            => json_encode($chart_data_60, JSON_THROW_ON_ERROR),
                 'chart_data_90'            => json_encode($chart_data_90, JSON_THROW_ON_ERROR),
-                'daily_stats'              => $stats->pluck('posts_count', 'date')->mapWithKeys(fn($count, $date) => [$date->toDateString() => $count]),
             ], $this->prepareCommonProfileData($user)));
         } catch (\JsonException $e) {
             dd($e->getFile(), $e->getLine(), $e->getMessage(), $e->getTrace());
