@@ -63,15 +63,15 @@ trait PreparesProfileData {
 
         // アーカイブリストを取得
         $archives = Post::where('did', $user->did)
-            ->selectRaw('strftime("%Y%m", posted_at) as year_month')
-            ->distinct()
+            ->selectRaw('strftime("%Y%m", posted_at) as year_month, COUNT(*) as count')
+            ->groupBy('year_month')
             ->orderBy('year_month', 'desc')
             ->get()
-            ->pluck('year_month')
-            ->map(function ($ym) {
+            ->map(function ($archive) {
                 return [
-                    'ym'    => $ym,
-                    'label' => substr($ym, 0, 4) . '年' . substr($ym, 4, 2) . '月',
+                    'ym'    => $archive->year_month,
+                    'label' => substr($archive->year_month, 0, 4) . '年' . substr($archive->year_month, 4, 2) . '月',
+                    'count' => $archive->count,
                 ];
             });
 
