@@ -6,9 +6,11 @@ use App\Models\DailyStat;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Traits\PreparesProfileData;
 
 class StatusController extends Controller
 {
+    use PreparesProfileData;
     /**
      * 指定されたハンドルのユーザーの統計情報を表示します。
      * データベースから日ごとの統計データを取得し、集計してビューに渡します。
@@ -111,28 +113,30 @@ class StatusController extends Controller
         $chart_data_90 = $prepare_chart_data($last_90_days_stats);
 
         // 統計情報ビューにデータを渡して表示します。
-        return view('status.show', [
-            'handle' => $handle,
-            'user' => $user,
-            'stats' => $stats,
-            'total_posts' => $total_posts,
-            'total_likes' => $total_likes,
-            'total_replies' => $total_replies,
-            'total_reposts' => $total_reposts,
-            'total_mentions' => $total_mentions,
-            'days_with_posts' => $days_with_posts,
-            'days_without_posts' => $days_without_posts,
-            'max_posts_per_day' => $max_posts_per_day,
-            'average_posts_per_day' => $average_posts_per_day,
-            'period_start' => $period_start,
-            'period_end' => $period_end,
-            'period_days' => $period_days,
-            'follower_following_ratio' => $follower_following_ratio,
-            'max_posts_per_day_date' => $max_posts_per_day_date, // ここを追加
-            'chart_data_all' => json_encode($chart_data_all),
-            'chart_data_30' => json_encode($chart_data_30),
-            'chart_data_60' => json_encode($chart_data_60),
-            'chart_data_90' => json_encode($chart_data_90),
-        ]);
+        try {
+            return view('status.show', array_merge([
+                'stats'                    => $stats,
+                'total_posts'              => $total_posts,
+                'total_likes'              => $total_likes,
+                'total_replies'            => $total_replies,
+                'total_reposts'            => $total_reposts,
+                'total_mentions'           => $total_mentions,
+                'days_with_posts'          => $days_with_posts,
+                'days_without_posts'       => $days_without_posts,
+                'max_posts_per_day'        => $max_posts_per_day,
+                'average_posts_per_day'    => $average_posts_per_day,
+                'period_start'             => $period_start,
+                'period_end'               => $period_end,
+                'period_days'              => $period_days,
+                'follower_following_ratio' => $follower_following_ratio,
+                'max_posts_per_day_date'   => $max_posts_per_day_date, // ここを追加
+                'chart_data_all'           => json_encode($chart_data_all, JSON_THROW_ON_ERROR),
+                'chart_data_30'            => json_encode($chart_data_30, JSON_THROW_ON_ERROR),
+                'chart_data_60'            => json_encode($chart_data_60, JSON_THROW_ON_ERROR),
+                'chart_data_90'            => json_encode($chart_data_90, JSON_THROW_ON_ERROR),
+            ], $this->prepareCommonProfileData($user)));
+        } catch (\JsonException $e) {
+            dd($e->getFile(), $e->getLine(), $e->getMessage(), $e->getTrace());
+        }
     }
 }

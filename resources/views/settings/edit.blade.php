@@ -1,13 +1,11 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>設定</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100">
-<div class="container mx-auto p-4">
+@extends('layouts.app')
+
+@section('title', '設定')
+
+@section('content')
+    <x-is-fetching-message :is_fetching="$is_fetching"/>
+    <x-profile-main-content :profile="$profile" :handle="$handle"/>
+
     <h1 class="text-2xl font-bold mb-4">設定</h1>
 
     @if (session('status'))
@@ -67,6 +65,4 @@
             </button>
         </form>
     </div>
-</div>
-</body>
-</html>
+@endsection

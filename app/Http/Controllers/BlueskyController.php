@@ -9,14 +9,15 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
-use Revolution\Bluesky\Agent\LegacyAgent;
 use Revolution\Bluesky\BlueskyManager;
-use Revolution\Bluesky\Client\SubClient\BskyClient;
 use Revolution\Bluesky\Facades\Bluesky;
 use Revolution\Bluesky\Session\AbstractSession;
 use Revolution\Bluesky\Session\LegacySession;
+use App\Traits\PreparesProfileData;
 
 class BlueskyController extends Controller {
+    use PreparesProfileData;
+
     /**
      * Blueskyセッション情報を保持するプロパティ。
      * @var AbstractSession|null
@@ -27,7 +28,7 @@ class BlueskyController extends Controller {
      * Bluesky APIのログインエンドポイントURL。
      * @var string
      */
-    private $apiUrlLogin   = 'https://bsky.social/xrpc/com.atproto.server.createSession';
+    private $apiUrlLogin = 'https://bsky.social/xrpc/com.atproto.server.createSession';
 
     /**
      * Bluesky APIのセッションリフレッシュエンドポイントURL。
@@ -47,6 +48,7 @@ class BlueskyController extends Controller {
      * BlueskyセッションをLaravelのセッションに保存します。
      *
      * @param AbstractSession $session 保存するBlueskyセッションオブジェクト。
+     *
      * @return void
      */
     public function setBlueskySession(AbstractSession $session) {
@@ -55,7 +57,6 @@ class BlueskyController extends Controller {
 
     /**
      * LaravelのセッションからBlueskyセッションを取得します。
-     *
      * @return AbstractSession|null 取得したBlueskyセッションオブジェクト、またはnull。
      */
     public function getBlueskySession() {
@@ -65,7 +66,6 @@ class BlueskyController extends Controller {
     /**
      * 既存のBlueskyセッションを再開します。
      * セッションが有効期限切れの場合、リフレッシュを試みます。
-     *
      * @return void
      */
     public function resumeSession() {
@@ -80,7 +80,6 @@ class BlueskyController extends Controller {
 
     /**
      * 現在のBlueskyManagerインスタンスを取得します。
-     *
      * @return BlueskyManager
      */
     public function getCurrentSession(): BlueskyManager {
@@ -89,7 +88,6 @@ class BlueskyController extends Controller {
 
     /**
      * ログインフォームを表示します。
-     *
      * @return \Illuminate\Contracts\View\View
      */
     public function login() {
@@ -102,6 +100,7 @@ class BlueskyController extends Controller {
      * 認証成功後、ユーザー情報をデータベースに保存し、セッションにログイン状態を保持します。
      *
      * @param \Illuminate\Http\Request $request HTTPリクエストオブジェクト。
+     *
      * @return \Illuminate\Http\RedirectResponse ログイン後のリダイレクトレスポンス。
      */
     public function doLogin(Request $request) {
@@ -134,18 +133,18 @@ class BlueskyController extends Controller {
                 $user = User::updateOrCreate(
                     ['did' => $did],
                     [
-                        'handle'            => $handle,
-                        'display_name'      => $profile_data['displayName'] ?? null,
-                        'description'       => $profile_data['description'] ?? null,
-                        'avatar_url'        => $profile_data['avatar'] ?? null,
-                        'banner_url'        => $profile_data['banner'] ?? null,
-                        'followers_count'   => $profile_data['followersCount'] ?? 0,
-                        'following_count'   => $profile_data['followsCount'] ?? 0,
-                        'posts_count'       => $profile_data['postsCount'] ?? 0,
-                        'registered_at'     => isset($profile_data['createdAt']) ? new \DateTime($profile_data['createdAt']) : null,
-                        'access_jwt'        => $access_jwt,
-                        'refresh_jwt'       => $refresh_jwt,
-                        'last_login_at'     => now(),
+                        'handle'          => $handle,
+                        'display_name'    => $profile_data['displayName'] ?? null,
+                        'description'     => $profile_data['description'] ?? null,
+                        'avatar_url'      => $profile_data['avatar'] ?? null,
+                        'banner_url'      => $profile_data['banner'] ?? null,
+                        'followers_count' => $profile_data['followersCount'] ?? 0,
+                        'following_count' => $profile_data['followsCount'] ?? 0,
+                        'posts_count'     => $profile_data['postsCount'] ?? 0,
+                        'registered_at'   => isset($profile_data['createdAt']) ? new \DateTime($profile_data['createdAt']) : null,
+                        'access_jwt'      => $access_jwt,
+                        'refresh_jwt'     => $refresh_jwt,
+                        'last_login_at'   => now(),
                     ]
                 );
 
@@ -176,6 +175,7 @@ class BlueskyController extends Controller {
      * データベースからユーザー情報と投稿データを取得し、ビューに渡します。
      *
      * @param string $handle 表示するユーザーのハンドル名。
+     *
      * @return \Illuminate\Contracts\View\View|\Illuminate\Http\Response プロフィールビューまたはエラーレスポンス。
      */
     public function showProfile(string $handle, Request $request) {
@@ -198,21 +198,6 @@ class BlueskyController extends Controller {
                 }
             }
 
-            // データベースから取得したユーザー情報をもとに、プロフィール表示用のデータを準備します。
-            $profile_data = [
-                'did' => $user->did,
-                'handle' => $user->handle,
-                'display_name' => $user->display_name,
-                'description' => $user->description,
-                'avatar' => $user->avatar_url,
-                'banner' => $user->banner_url,
-                'followers_count' => $user->followers_count,
-                'follows_count' => $user->following_count,
-                'posts_count' => $user->posts->count(),
-                'likes_count' => $user->likes->count(),
-                'created_at' => $user->registered_at ? $user->registered_at->toIso8601String() : null,
-            ];
-
             // ユーザーの投稿をデータベースから取得し、新しいものから順に20件ずつページネーションします。
             $posts = Post::where('did', $user->did)
                 ->with('media') // メディア情報も一緒にロード
@@ -224,7 +209,7 @@ class BlueskyController extends Controller {
                     $year = substr($yearMonth, 0, 4);
                     $month = substr($yearMonth, 4, 2);
                     $query->whereYear('posted_at', $year)
-                          ->whereMonth('posted_at', $month);
+                        ->whereMonth('posted_at', $month);
                 })
                 ->when($request->has('search_text'), function ($query) use ($request) {
                     $searchText = $request->input('search_text');
@@ -250,62 +235,10 @@ class BlueskyController extends Controller {
                 })
                 ->paginate(20)->appends(request()->query());
 
-            // メンションランキング上位10名を取得
-            $top_mentions = Post::where('did', $user->did)
-                ->whereNotNull('reply_to_handle')
-                ->select('reply_to_handle', DB::raw('count(*) as mention_count'))
-                ->groupBy('reply_to_handle')
-                ->orderBy('mention_count', 'desc')
-                ->orderBy('reply_to_handle', 'asc')
-                ->limit(10)
-                ->get();
-
-            // ハッシュタグランキング上位10件を取得
-            $top_hashtags = \App\Models\Hashtag::whereHas('post', function ($query) use ($user) {
-                $query->where('did', $user->did);
-            })
-                ->select('tag', DB::raw('count(*) as count'))
-                ->groupBy('tag')
-                ->orderBy('count', 'desc')
-                ->orderBy('tag', 'asc')
-                ->limit(10)
-                ->get();
-
-            // 過去1年間のDailyStatデータを取得
-            $dailyStats = \App\Models\DailyStat::where('did', $user->did)
-                ->where('date', '>=', now()->subYear())
-                ->orderBy('date', 'asc')
-                ->get()
-                ->mapWithKeys(function ($stat) {
-                    return [$stat->date_carbon->format('Y-m-d') => $stat->posts_count];
-                });
-
-            // アーカイブリストを取得
-            $archives = Post::where('did', $user->did)
-                ->selectRaw('strftime("%Y%m", posted_at) as year_month')
-                ->distinct()
-                ->orderBy('year_month', 'desc')
-                ->get()
-                ->pluck('year_month')
-                ->map(function ($ym) {
-                    return [
-                        'ym' => $ym,
-                        'label' => substr($ym, 0, 4) . '年' . substr($ym, 4, 2) . '月',
-                    ];
-                });
-
             // プロフィールビューにデータを渡して表示します。
-            return view('profile', [
-                'did'        => $profile_data['did'],
-                'handle'     => $handle,
-                'profile'    => $profile_data,
-                'posts'      => $posts,
-                'top_mentions' => $top_mentions, // 追加
-                'top_hashtags' => $top_hashtags, // 追加
-                'is_fetching' => $user->isFetchingData(), // ユーザーがデータ取得中かどうかをモデルから取得します。
-                'dailyStats' => $dailyStats->toJson(),
-                'archives'   => $archives,
-            ]);
+            return view('profile', array_merge([
+                'posts' => $posts,
+            ], $this->prepareCommonProfileData($user)));
         } catch (\Exception $e) {
             // エラーが発生した場合は、デバッグ情報を出力し、エラーメッセージと共に前のページに戻ります。
             dd($e->getFile(), $e->getLine(), $e->getMessage(), $e->getTrace());
@@ -317,8 +250,9 @@ class BlueskyController extends Controller {
     /**
      * 指定されたハンドルのユーザーのメンションランキングを表示します。
      *
-     * @param string $handle 表示するユーザーのハンドル名。
+     * @param string                   $handle 表示するユーザーのハンドル名。
      * @param \Illuminate\Http\Request $request HTTPリクエストオブジェクト。
+     *
      * @return \Illuminate\Contracts\View\View|\Illuminate\Http\Response メンションランキングビューまたはエラーレスポンス。
      */
     public function showFriends(string $handle, Request $request) {
@@ -353,13 +287,14 @@ class BlueskyController extends Controller {
             $mentions = $mentions->paginate(50)->appends(request()->query());
 
             return view('friends', [
-                'handle' => $handle,
+                'handle'   => $handle,
                 'mentions' => $mentions,
-                'sort_by' => $sort_by,
-                'order' => $order,
+                'sort_by'  => $sort_by,
+                'order'    => $order,
             ]);
         } catch (\Exception $e) {
             dd($e->getFile(), $e->getLine(), $e->getMessage(), $e->getTrace());
+
             return back()->with('error', 'Error: ' . $e->getMessage());
         }
     }
@@ -368,10 +303,10 @@ class BlueskyController extends Controller {
      * ユーザーをログアウトさせ、セッションをクリアします。
      *
      * @param \Illuminate\Http\Request $request HTTPリクエストオブジェクト。
+     *
      * @return \Illuminate\Http\RedirectResponse ログアウト後のリダイレクトレスポンス。
      */
-    public function doLogout(Request $request)
-    {
+    public function doLogout(Request $request) {
         Auth::logout(); // ユーザーをログアウトさせます。
 
         $request->session()->invalidate(); // 現在のセッションを無効にします。

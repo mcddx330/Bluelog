@@ -2,42 +2,42 @@
 
 namespace App\Http\Controllers;
 
+use App\Traits\PreparesProfileData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\BlueskyController;
 use App\Models\Post;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use App\Providers\AppServiceProvider;
 use League\Csv\Writer;
 
-class SettingsController extends Controller
-{
+class SettingsController extends Controller {
+    use PreparesProfileData;
+
     /**
      * ユーザー設定の編集フォームを表示します。
-     *
      * 認証済みのユーザー情報を取得し、設定編集ビューに渡します。
-     *
      * @return \Illuminate\Contracts\View\View 設定編集ビュー。
      */
-    public function edit()
-    {
+    public function edit() {
         $user = Auth::user();
 
-        return view('settings.edit', compact('user'));
+        return view(
+            'settings.edit', array_merge(
+            compact('user'),
+        ), $this->prepareCommonProfileData($user));
     }
 
     /**
      * ユーザー設定をストレージに更新します。
-     *
      * リクエストからバリデートされた設定値（例: is_private）を取得し、
      * 認証済みユーザーのモデルを更新して保存します。
      *
-     * @param  \Illuminate\Http\Request  $request HTTPリクエストオブジェクト。
+     * @param \Illuminate\Http\Request $request HTTPリクエストオブジェクト。
+     *
      * @return \Illuminate\Http\RedirectResponse 設定更新後のリダイレクトレスポポンス。
      */
-    public function update(Request $request)
-    {
+    public function update(Request $request) {
         $user = Auth::user();
 
         // リクエストデータのバリデーションを行います。
@@ -58,14 +58,13 @@ class SettingsController extends Controller
 
     /**
      * ユーザーアカウントを削除します。
-     *
      * 認証済みのユーザーアカウントをデータベースから削除し、ログアウトさせます。
      *
-     * @param  \Illuminate\Http\Request  $request HTTPリクエストオブジェクト。
+     * @param \Illuminate\Http\Request $request HTTPリクエストオブジェクト。
+     *
      * @return \Illuminate\Http\RedirectResponse 削除後のリダイレクトレスポンス。
      */
-    public function destroy(Request $request)
-    {
+    public function destroy(Request $request) {
         $user = Auth::user();
 
         DB::transaction(function () use ($user) {
@@ -81,11 +80,9 @@ class SettingsController extends Controller
 
     /**
      * 認証済みユーザーの投稿データをCSV形式でエクスポートします。
-     *
      * @return \Symfony\Component\HttpFoundation\StreamedResponse
      */
-    public function exportPosts(): StreamedResponse
-    {
+    public function exportPosts(): StreamedResponse {
         $user = Auth::user();
         $filename = sprintf(
             'bluelog_posts_%s_%s.csv',
@@ -95,7 +92,7 @@ class SettingsController extends Controller
 
 
         $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type'        => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
 
