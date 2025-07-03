@@ -81,9 +81,9 @@ trait PreparesProfileData {
             'did'          => $profile_data['did'],
             'handle'       => $profile_data['handle'],
             'profile'      => $profile_data,
-            'top_mentions' => $top_mentions, // 追加
-            'top_hashtags' => $top_hashtags, // 追加
-            'dailyStats'   => $dailyStats->toJson(),
+            'top_mentions' => $top_mentions,
+            'top_hashtags' => $top_hashtags,
+            'daily_stats'  => $dailyStats,
             'archives'     => $archives,
         ];
     }

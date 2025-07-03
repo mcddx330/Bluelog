@@ -2,97 +2,6 @@
 
 @section('title', 'Bluesky Profile')
 
-@push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <script>
-        document.querySelectorAll('.post-video').forEach(function (video) {
-            if (Hls.isSupported()) {
-                var hls = new Hls();
-                var videoSrc = video.getAttribute('data-src');
-                hls.loadSource(videoSrc);
-                hls.attachMedia(video);
-            } else {
-                video.innerHTML = 'お使いのブラウザはHLS(HTTP Live Streaming)をサポートしていません。';
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', function () {
-            const dailyStats = JSON.parse('{!! $dailyStats !!}');
-            const heatmapContainer = document.getElementById('heatmap-container');
-            const heatmapTooltip = document.getElementById('heatmap-tooltip');
-
-            // Define color scale (adjust as needed)
-            const colors = [
-                '#ebedf0', // No posts
-                '#9be9a8', // 1-5 posts
-                '#40c463', // 6-10 posts
-                '#30a14e', // 11-15 posts
-                '#216e39'  // 16+ posts
-            ];
-
-            // Determine max posts for dynamic scaling (optional, but good for varied data)
-            let maxPosts = 0;
-            Object.values(dailyStats).forEach(count => {
-                if (count > maxPosts) {
-                    maxPosts = count;
-                }
-            });
-
-            // Function to get color based on post count
-            function getColor(count) {
-                if (count === 0) return colors[0];
-                const step = maxPosts > 0 ? maxPosts / (colors.length - 1) : 1;
-                let colorIndex = Math.ceil(count / step);
-                if (colorIndex >= colors.length) colorIndex = colors.length - 1;
-                if (colorIndex < 1) colorIndex = 1;
-                return colors[colorIndex];
-            }
-
-            // Generate dates for the last year
-            const today = new Date();
-            const oneYearAgo = new Date();
-            oneYearAgo.setFullYear(today.getFullYear() - 1);
-
-            let currentDate = new Date(oneYearAgo);
-            while (currentDate <= today) {
-                const dateString = currentDate.toISOString().slice(0, 10); // YYYY-MM-DD
-                const postsCount = dailyStats[dateString] || 0;
-                const color = getColor(postsCount);
-
-                const cell = document.createElement('div');
-                cell.className = 'w-3 h-3 rounded-sm relative'; // Add relative for positioning tooltip if needed
-                cell.style.backgroundColor = color;
-                cell.dataset.date = dateString;
-                cell.dataset.posts = postsCount;
-
-                cell.addEventListener('mouseover', function (e) {
-                    const date = this.dataset.date;
-                    const posts = this.dataset.posts;
-                    const formattedDate = date.replace(/(\d{4})-(\d{2})-(\d{2})/, '$1/$2/$3');
-                    heatmapTooltip.textContent = `${formattedDate}: ${posts}件`;
-                    heatmapTooltip.style.left = `${e.pageX + 10}px`;
-                    heatmapTooltip.style.top = `${e.pageY + 10}px`;
-                    heatmapTooltip.classList.remove('hidden');
-                });
-
-                cell.addEventListener('mouseout', function () {
-                    heatmapTooltip.classList.add('hidden');
-                });
-
-                cell.addEventListener('click', function () {
-                    const date = this.dataset.date;
-                    const handle = '{{ $handle }}'; // Blade variable for handle
-                    window.location.href = `{{ route('profile.show', ['handle' => $handle]) }}?date=${date}`;
-                });
-
-                heatmapContainer.appendChild(cell);
-
-                currentDate.setDate(currentDate.getDate() + 1); // Move to next day
-            }
-        });
-    </script>
-@endpush
-
 @section('content')
     @if(session('error'))
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
@@ -127,7 +36,9 @@
 
     @if(isset($profile))
         <x-is-fetching-message :is_fetching="$is_fetching"/>
-        <x-profile-main-content :profile="$profile" :handle="$handle"/>
+
+        <x-profile-main-content :profile="$profile" :handle="$handle" :daily_stats="$daily_stats" />
+
         <div class="lg:flex lg:space-x-8 mt-8">
             <x-profile-posts-section :posts="$posts" :handle="$handle" :current_sort="request('sort', 'posted_at_desc')"
                                      :query_params="request()->except(['sort', 'page'])"/>
