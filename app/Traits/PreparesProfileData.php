@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use App\Models\Post;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 trait PreparesProfileData {
@@ -53,8 +54,9 @@ trait PreparesProfileData {
             ->get();
 
         // 過去1年間のDailyStatデータを取得
-        $dailyStats = \App\Models\DailyStat::where('did', $user->did)
-            ->where('date', '>=', now()->subYear())
+        $daily_stats_start_at = Carbon::now()->subYear()->firstOfYear();
+        $daily_stats = \App\Models\DailyStat::where('did', $user->did)
+            ->where('date', '>=', $daily_stats_start_at)
             ->orderBy('date', 'asc')
             ->get()
             ->mapWithKeys(function ($stat) {
@@ -83,7 +85,7 @@ trait PreparesProfileData {
             'profile'      => $profile_data,
             'top_mentions' => $top_mentions,
             'top_hashtags' => $top_hashtags,
-            'daily_stats'  => $dailyStats,
+            'daily_stats'  => $daily_stats,
             'archives'     => $archives,
         ];
     }

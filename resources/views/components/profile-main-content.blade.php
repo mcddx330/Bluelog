@@ -148,7 +148,7 @@
                 // Generate dates for the last year
                 const today = new Date();
                 const oneYearAgo = new Date();
-                oneYearAgo.setFullYear(today.getFullYear() - 1);
+                oneYearAgo.setFullYear(today.getFullYear() - 1, 0, 2);
 
                 let currentDate = new Date(oneYearAgo);
                 while (currentDate <= today) {
