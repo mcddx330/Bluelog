@@ -53,6 +53,10 @@ use App\Models\Hashtag;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Post whereText($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Post whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Post whereUri($value)
+ * @property string|null $posted_date_only
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Hashtag> $hashtags
+ * @property-read int|null $hashtags_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Post wherePostedDateOnly($value)
  * @mixin \Eloquent
  */
 class Post extends Model {

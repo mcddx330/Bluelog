@@ -209,6 +209,7 @@ class BlueskyController extends Controller {
                 'followers_count' => $user->followers_count,
                 'follows_count' => $user->following_count,
                 'posts_count' => $user->posts->count(),
+                'likes_count' => $user->likes->count(),
                 'created_at' => $user->registered_at ? $user->registered_at->toIso8601String() : null,
             ];
 

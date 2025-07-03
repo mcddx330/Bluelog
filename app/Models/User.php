@@ -54,6 +54,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRegisteredAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Post> $posts
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Like> $likes
+ * @property-read int|null $likes_count
  * @mixin \Eloquent
  */
 class User extends Authenticatable {
@@ -144,5 +146,9 @@ class User extends Authenticatable {
 
     public function posts(): HasMany {
         return $this->hasMany(Post::class, 'did', 'did');
+    }
+
+    public function likes(): HasMany {
+        return $this->hasMany(Like::class, 'did', 'did');
     }
 }
