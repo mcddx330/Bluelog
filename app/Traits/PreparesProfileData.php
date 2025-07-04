@@ -2,6 +2,8 @@
 
 namespace App\Traits;
 
+use App\Models\DailyStat;
+use App\Models\Hashtag;
 use App\Models\Post;
 use App\Models\User;
 use Carbon\Carbon;
@@ -43,7 +45,7 @@ trait PreparesProfileData {
             ->get();
 
         // ハッシュタグランキング上位10件を取得
-        $top_hashtags = \App\Models\Hashtag::whereHas('post', function ($query) use ($user) {
+        $top_hashtags = Hashtag::whereHas('post', function ($query) use ($user) {
             $query->where('did', $user->did);
         })
             ->select('tag', DB::raw('count(*) as count'))
@@ -55,7 +57,7 @@ trait PreparesProfileData {
 
         // 過去1年間のDailyStatデータを取得
         $daily_stats_start_at = Carbon::now()->subYear()->firstOfYear();
-        $daily_stats = \App\Models\DailyStat::where('did', $user->did)
+        $daily_stats = DailyStat::where('did', $user->did)
             ->where('date', '>=', $daily_stats_start_at)
             ->orderBy('date', 'asc')
             ->get()

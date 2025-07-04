@@ -6,9 +6,9 @@
 
 <div class="relative bg-cover bg-center rounded-t-lg overflow-hidden shadow-md"
      style="
-                background-image: url('{{ $profile['banner'] ?? 'https://via.placeholder.com/800x200?text=No+Banner+Image' }}');
-                min-height: 240px;
-            ">
+        background-image: url('{{ $profile['banner'] ?? 'https://via.placeholder.com/800x200?text=No+Banner+Image' }}');
+        min-height: 240px;
+    ">
     <div
         id="profile-header-overlay"
         class="
@@ -27,7 +27,6 @@
             backdrop-blur-sm
         "
     >
-
         <div class="flex items-center space-x-4">
             @if(isset($profile['avatar']))
                 <img src="{{ $profile['avatar'] }}" alt="Avatar" class="w-20 h-20 rounded-full border-4 border-white">
@@ -148,7 +147,7 @@
                 // Generate dates for the last year
                 const today = new Date();
                 const oneYearAgo = new Date();
-                oneYearAgo.setFullYear(today.getFullYear() - 1, 0, 2);
+                oneYearAgo.setFullYear(today.getFullYear() - 1, 0, 1);
 
                 let currentDate = new Date(oneYearAgo);
                 while (currentDate <= today) {

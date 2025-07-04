@@ -18,23 +18,9 @@
 
     @if(isset($posts) && count($posts) > 0)
         <div class="mt-8">
-            <div class="space-y-4">
-                @foreach($posts as $post)
-                    <div class="bg-white shadow-md rounded-lg p-4">
-                        <p class="text-sm text-gray-500 mb-2">Liked at: {{ $post['liked_at']->format('Y-m-d H:i:s') }}</p>
-                        {{-- Bluesky公式の埋め込みスニペットを使用 --}}
-                        <blockquote class="bluesky-embed"
-                                    data-bluesky-uri="{{ $post['bluesky_uri'] }}"
-                                    data-bluesky-cid="{{ $post['bluesky_cid'] }}"
-                                    data-bluesky-embed-color-mode="system">
-                            <p>Loading Bluesky post...</p>
-                        </blockquote>
-                    </div>
-                @endforeach
-            </div>
-            {{-- ページネーションリンク --}}
-            <div class="mt-4">
-                {{ $likes_pagination->links() }}
+            <div class="lg:flex lg:space-x-8 mt-8">
+                <x-likes-posts-section :posts="$posts" :likes_pagination="$likes_pagination"/>
+                <x-profile-sidebar :handle="$handle" :archives="$archives" :top_mentions="$top_mentions" :top_hashtags="$top_hashtags"/>
             </div>
         </div>
     @else
