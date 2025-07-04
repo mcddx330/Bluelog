@@ -57,31 +57,11 @@ class BlueskyLikesController extends BlueskyController
             }
 
             // 「いいね」履歴ビューにデータを渡して表示します。
-            // プロフィールデータを構築
-            $profile_data = [
-                'did' => $user->did,
-                'handle' => $user->handle,
-                'display_name' => $user->display_name,
-                'description' => $user->description,
-                'avatar' => $user->avatar_url,
-                'banner' => $user->banner_url,
-                'followers_count' => $user->followers_count,
-                'follows_count' => $user->following_count,
-                'posts_count' => $user->posts_count,
-                'likes_count' => $user->likes_count,
-                'created_at' => $user->registered_at ? $user->registered_at->toIso8601String() : null,
-            ];
-
-            $is_fetching = $user->isFetchingData();
-
-            $common_data = $this->prepareCommonProfileData($user);
-
-            // 「いいね」履歴ビューにデータを渡して表示します。
             return view('likes', array_merge([
                 'handle' => $handle,
                 'posts' => $posts,
                 'likes_pagination' => $likes, // ページネーション情報をビューに渡します。
-            ], $common_data));
+            ], $this->prepareCommonProfileData($user)));
         } catch (Exception $e) {
             // エラーが発生した場合は、エラーメッセージと共に前のページに戻ります。
             return back()->with('error', 'Error: ' . $e->getMessage());
