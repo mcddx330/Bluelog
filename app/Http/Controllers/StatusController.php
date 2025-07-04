@@ -47,7 +47,7 @@ class StatusController extends Controller
         $total_likes = $stats->sum('likes_count');
         $total_replies = $stats->sum('replies_count');
         $total_reposts = $stats->sum('reposts_count');
-        $total_mentions = $stats->sum('mentions_count');
+        $total_replies = $stats->sum('replies_count');
 
         // 投稿があった日数の計算
         $days_with_posts = $stats->where('posts_count', '>', 0)->count();
@@ -97,7 +97,7 @@ class StatusController extends Controller
                 'likes' => $collection->pluck('likes_count')->toArray(),
                 'replies' => $collection->pluck('replies_count')->toArray(),
                 'reposts' => $collection->pluck('reposts_count')->toArray(),
-                'mentions' => $collection->pluck('mentions_count')->toArray(),
+                'replies' => $collection->pluck('replies_count')->toArray(),
             ];
         };
 
@@ -120,7 +120,7 @@ class StatusController extends Controller
                 'total_likes'              => $total_likes,
                 'total_replies'            => $total_replies,
                 'total_reposts'            => $total_reposts,
-                'total_mentions'           => $total_mentions,
+                'total_replies'           => $total_replies,
                 'days_with_posts'          => $days_with_posts,
                 'days_without_posts'       => $days_without_posts,
                 'max_posts_per_day'        => $max_posts_per_day,

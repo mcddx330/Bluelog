@@ -10,7 +10,7 @@ return new class extends Migration {
      * @return void
      */
     public function up() {
-        Schema::create('mentions', function (Blueprint $table) {
+        Schema::create('replies', function (Blueprint $table) {
             // プライマリキー
             $table->uuid('id')->primary();
 
@@ -20,16 +20,16 @@ return new class extends Migration {
                 ->references('did')->on('posts')
                 ->onDelete('cascade');
 
-            // メンション情報
-            $table->string('mentioned_did', 255)->index()->comment('メンションされたユーザーのDID');
-            $table->string('mentioned_handle', 255)->index()->comment('メンションされたユーザーのハンドル');
+            // リプライ情報
+            $table->string('replied_did', 255)->index()->comment('リプライされたユーザーのDID');
+            $table->string('replied_handle', 255)->index()->comment('リプライされたユーザーのハンドル');
 
             // レコード作成・更新日時
             $table->timestamps(); // created_at, updated_at
 
             // 必要に応じてインデックス
-            // $table->index('mentioned_did');
-            // $table->index('mentioned_handle');
+            // $table->index('replied_did');
+            // $table->index('replied_handle');
         });
     }
 
@@ -38,6 +38,6 @@ return new class extends Migration {
      * @return void
      */
     public function down() {
-        Schema::dropIfExists('mentions');
+        Schema::dropIfExists('replies');
     }
 };

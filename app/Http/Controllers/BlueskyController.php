@@ -248,14 +248,14 @@ class BlueskyController extends Controller {
     }
 
     /**
-     * 指定されたハンドルのユーザーのメンションランキングを表示します。
+     * 指定されたハンドルのユーザーのリプライランキングを表示します。
      *
      * @param string                   $handle 表示するユーザーのハンドル名。
      * @param \Illuminate\Http\Request $request HTTPリクエストオブジェクト。
      *
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\Response メンションランキングビューまたはエラーレスポンス。
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\Response リプライランキングビューまたはエラーレスポンス。
      */
-    public function showFriends(string $handle, Request $request) {
+    public function showReplies(string $handle, Request $request) {
         try {
             $user = User::where('handle', $handle)->first();
 
@@ -272,26 +272,24 @@ class BlueskyController extends Controller {
             $sort_by = $request->input('sort_by', 'count'); // 'count' or 'handle'
             $order = $request->input('order', 'desc'); // 'asc' or 'desc'
 
-            $mentions = Post::where('did', $user->did)
+            $replies = Post::where('did', $user->did)
                 ->whereNotNull('reply_to_handle')
-                ->select('reply_to_handle', DB::raw('count(*) as mention_count'))
+                ->select('reply_to_handle', DB::raw('count(*) as reply_count'))
                 ->groupBy('reply_to_handle');
-
             if ($sort_by === 'handle') {
-                $mentions->orderBy('reply_to_handle', $order);
+                $replies->orderBy('reply_to_handle', $order);
             } else { // default sort by count
-                $mentions->orderBy('mention_count', $order);
-                $mentions->orderBy('reply_to_handle', 'asc'); // Secondary sort
+                $replies->orderBy('reply_count', $order);
+                $replies->orderBy('reply_to_handle', 'asc'); // Secondary sort
             }
+            $replies = $replies->paginate(20)->appends(request()->query());
 
-            $mentions = $mentions->paginate(50)->appends(request()->query());
-
-            return view('friends', [
-                'handle'   => $handle,
-                'mentions' => $mentions,
-                'sort_by'  => $sort_by,
-                'order'    => $order,
-            ]);
+            return view('replies', array_merge([
+                'handle'  => $handle,
+                'replies' => $replies,
+                'sort_by' => $sort_by,
+                'order'   => $order,
+            ], $this->prepareCommonProfileData($user)));
         } catch (\Exception $e) {
             dd($e->getFile(), $e->getLine(), $e->getMessage(), $e->getTrace());
 

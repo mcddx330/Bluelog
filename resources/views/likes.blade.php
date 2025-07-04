@@ -16,14 +16,12 @@
 
     <x-profile-main-content :profile="$profile" :handle="$handle"/>
 
-    @if(isset($posts) && count($posts) > 0)
-        <div class="mt-8">
-            <div class="lg:flex lg:space-x-8 mt-8">
-                <x-likes-posts-section :posts="$posts" :likes_pagination="$likes_pagination"/>
-                <x-profile-sidebar :handle="$handle" :archives="$archives" :top_mentions="$top_mentions" :top_hashtags="$top_hashtags"/>
-            </div>
+    <div class="mt-8">
+        <h1 class="text-2xl font-bold">{{ "@". $handle }} のいいね一覧</h1>
+
+        <div class="lg:flex lg:space-x-8">
+            <x-likes-posts-section :posts="$posts" :likes_pagination="$likes_pagination"/>
+            <x-profile-sidebar :handle="$handle" :archives="$archives" :top_replies="$top_replies" :top_hashtags="$top_hashtags"/>
         </div>
-    @else
-        <p>No liked posts found.</p>
-    @endif
+    </div>
 @endsection

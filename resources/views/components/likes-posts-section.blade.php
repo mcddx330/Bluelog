@@ -1,7 +1,7 @@
 @props(['posts', 'likes_pagination'])
 
 <div class="lg:w-2/3">
-    <div>
+    @if(isset($posts) && count($posts) > 0)
         <div class="space-y-4">
             <div class="mt-8 bg-white shadow-md rounded-lg p-6">
                 {{ $likes_pagination->links() }}
@@ -24,5 +24,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    @else
+        <p>いいねデータがありません。</p>
+    @endif
 </div>

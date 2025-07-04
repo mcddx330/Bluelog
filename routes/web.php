@@ -24,5 +24,5 @@ Route::middleware('auth')->group(function () {
 Route::get('/{handle}', [BlueskyController::class, 'showProfile'])->name('profile.show');
 Route::get('/{handle}/likes', [BlueskyLikesController::class, 'show'])->name('profile.likes');
 Route::get('/{handle}/status', [StatusController::class, 'show'])->name('profile.status');
-Route::get('/{handle}/friends', [BlueskyController::class, 'showFriends'])->name('profile.friends');
+Route::get('/{handle}/replies', [BlueskyController::class, 'showReplies'])->name('profile.replies');
 Route::get('/{handle}/hashtags', [App\Http\Controllers\HashtagController::class, 'index'])->name('profile.hashtags');

@@ -73,8 +73,8 @@
                             //    fill: false
                             //},
                             //{ // コメントアウトされている部分はそのまま維持
-                            //    label: 'メンション数',
-                            //    data: data_to_display.mentions,
+                            //    label: 'リプライ数',
+                            //    data: data_to_display.replies,
                             //    borderColor: 'rgb(153, 102, 255)',
                             //    backgroundColor: 'rgba(153, 102, 255, 0.8)', // 濃いめの色に設定
                             //    tension: 0.1,
@@ -137,13 +137,13 @@
         <div class="bg-white shadow-md rounded-lg p-6 mb-6">
             <h2 class="text-xl font-bold mb-4">全体統計</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div>
-                    <span class="font-semibold">記期間:</span>
-                    {{ $period_start ? $period_start->format('Y-m-d') . ' - ' . $period_end->format('Y-m-d') : 'N/A' }}
-                    ({{ number_format($period_days) }} 日間)
-                </div>
                 <div><span
                         class="font-semibold">Bluesky登録日時:</span> {{ $user->registered_at ? $user->registered_at->format('Y-m-d H:i:s') : 'N/A' }}
+                </div>
+                <div>
+                    <span class="font-semibold">Bluelog上における記録期間:</span>
+                    {{ $period_start ? $period_start->format('Y-m-d') . ' - ' . $period_end->format('Y-m-d') : 'N/A' }}
+                    ({{ number_format($period_days) }} 日間)
                 </div>
                 <div><span class="font-semibold">総投稿数:</span> {{ number_format($total_posts) }}</div>
                 <div><span class="font-semibold">つぶやいた日数:</span> {{ number_format($days_with_posts) }}</div>
@@ -159,7 +159,6 @@
                 <div><span class="font-semibold">総いいね数:</span> {{ number_format($total_likes) }}</div>
                 <div><span class="font-semibold">総リプライ数:</span> {{ number_format($total_replies) }}</div>
                 <div><span class="font-semibold">総リポスト数:</span> {{ number_format($total_reposts) }}</div>
-                <div><span class="font-semibold">総メンション数:</span> {{ number_format($total_mentions) }}</div>
                 <div><span class="font-semibold">フォロワー/フォロー比率:</span> {{ number_format($follower_following_ratio, 2) }}</div>
             </div>
         </div>
@@ -197,7 +196,7 @@
     {{--                                <th class="py-2 px-4">いいね</th>--}}
     {{--                                <th class="py-2 px-4">リプライ</th>--}}
     {{--                                <th class="py-2 px-4">リポスト</th>--}}
-    {{--                                <th class="py-2 px-4">メンション</th>--}}
+    {{--                                <th class="py-2 px-4">リプライ</th>--}}
     {{--                            </tr>--}}
     {{--                        </thead>--}}
     {{--                        <tbody>--}}
@@ -208,7 +207,7 @@
     {{--                                    <td class="py-2 px-4">{{ number_format($stat->likes_count) }}</td>--}}
     {{--                                    <td class="py-2 px-4">{{ number_format($stat->replies_count) }}</td>--}}
     {{--                                    <td class="py-2 px-4">{{ number_format($stat->reposts_count) }}</td>--}}
-    {{--                                    <td class="py-2 px-4">{{ number_format($stat->mentions_count) }}</td>--}}
+    {{--                                    <td class="py-2 px-4">{{ number_format($stat->replies_count) }}</td>--}}
     {{--                                </tr>--}}
     {{--                            @endforeach--}}
     {{--                        </tbody>--}}
@@ -288,8 +287,8 @@
                             //    fill: false
                             //},
                             //{
-                            //    label: 'メンション数',
-                            //    data: data_to_display.mentions,
+                            //    label: 'リプライ数',
+                            //    data: data_to_display.replies,
                             //    borderColor: 'rgb(153, 102, 255)',
                             //    backgroundColor: 'rgba(153, 102, 255, 0.8)', // 濃いめの色に設定
                             //    tension: 0.1,

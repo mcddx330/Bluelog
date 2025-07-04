@@ -34,17 +34,22 @@ trait PreparesProfileData {
 
         $is_fetching = $user->isFetchingData();
 
-        // メンションランキング上位10名を取得
-        $top_mentions = Post::where('did', $user->did)
+        // リプライランキング上位を取得
+        $top_replies = Post::where('did', $user->did)
             ->whereNotNull('reply_to_handle')
-            ->select('reply_to_handle', DB::raw('count(*) as mention_count'))
+            ->select('reply_to_handle', DB::raw('count(*) as reply_count'))
             ->groupBy('reply_to_handle')
-            ->orderBy('mention_count', 'desc')
+            ->orderBy('reply_count', 'desc')
             ->orderBy('reply_to_handle', 'asc')
             ->limit(10)
-            ->get();
+            ->get()
+            ->map(function ($reply) {
+                $bluelog_user = User::where('handle', $reply->reply_to_handle)->first();
+                $reply->is_bluelog_user = ($bluelog_user !== null);
+                return $reply;
+            });
 
-        // ハッシュタグランキング上位10件を取得
+        // ハッシュタグランキング上位を取得
         $top_hashtags = Hashtag::whereHas('post', function ($query) use ($user) {
             $query->where('did', $user->did);
         })
@@ -85,7 +90,7 @@ trait PreparesProfileData {
             'did'          => $profile_data['did'],
             'handle'       => $profile_data['handle'],
             'profile'      => $profile_data,
-            'top_mentions' => $top_mentions,
+            'top_replies' => $top_replies,
             'top_hashtags' => $top_hashtags,
             'daily_stats'  => $daily_stats,
             'archives'     => $archives,

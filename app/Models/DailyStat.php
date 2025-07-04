@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
+ *
  *
  * @property int $id
  * @property string $did
@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $likes_count
  * @property int $replies_count
  * @property int $reposts_count
- * @property int $mentions_count
+ * @property int $replies_count
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\User $user
@@ -28,7 +28,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DailyStat whereDid($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DailyStat whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DailyStat whereLikesCount($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DailyStat whereMentionsCount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DailyStat whererepliesCount($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DailyStat wherePostsCount($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DailyStat whereRepliesCount($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DailyStat whereRepostsCount($value)
@@ -61,7 +61,7 @@ class DailyStat extends Model
         'likes_count',
         'replies_count',
         'reposts_count',
-        'mentions_count',
+        'replies_count',
     ];
 
     /**
@@ -76,7 +76,7 @@ class DailyStat extends Model
         'likes_count' => 'integer',
         'replies_count' => 'integer',
         'reposts_count' => 'integer',
-        'mentions_count' => 'integer',
+        'replies_count' => 'integer',
     ];
 
     /**

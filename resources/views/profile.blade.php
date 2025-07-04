@@ -42,7 +42,7 @@
         <div class="lg:flex lg:space-x-8 mt-8">
             <x-profile-posts-section :posts="$posts" :handle="$handle" :current_sort="request('sort', 'posted_at_desc')"
                                      :query_params="request()->except(['sort', 'page'])"/>
-            <x-profile-sidebar :handle="$handle" :archives="$archives" :top_mentions="$top_mentions" :top_hashtags="$top_hashtags"/>
+            <x-profile-sidebar :handle="$handle" :archives="$archives" :top_replies="$top_replies" :top_hashtags="$top_hashtags"/>
         </div>
     @else
         <p>No profile data available.</p>

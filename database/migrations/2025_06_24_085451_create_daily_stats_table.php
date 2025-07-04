@@ -26,9 +26,8 @@ return new class extends Migration {
             // 日別カウント情報
             $table->unsignedBigInteger('posts_count')->default(0)->comment('その日のポスト数');
             $table->unsignedBigInteger('likes_count')->default(0)->comment('その日のいいね数（被いいね数ではなく、自分が行ったいいね）');
-            $table->unsignedBigInteger('replies_count')->default(0)->comment('その日のリプライ数');
             $table->unsignedBigInteger('reposts_count')->default(0)->comment('その日のリポスト数');
-            $table->unsignedBigInteger('mentions_count')->default(0)->comment('その日のメンション数');
+            $table->unsignedBigInteger('replies_count')->default(0)->comment('その日のリプライ数');
 
             // レコード作成・更新日時
             $table->timestamps(); // created_at, updated_at

@@ -52,7 +52,7 @@ class AppServiceProvider extends ServiceProvider
             $text
         );
 
-        // メンションを検出してリンクに変換
+        // リプライを検出してリンクに変換
         $text = preg_replace_callback(
             '/(@)([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/',
             function ($matches) {

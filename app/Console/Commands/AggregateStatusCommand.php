@@ -238,7 +238,6 @@ class AggregateStatusCommand extends Command {
                 }
                 $daily_data[$date]['posts_count'] += 1;
 
-                // todo: リプライといいつつ、これはメンション。なのでメンション数だけにstatsを絞る。カラム名も変える。リプライ→メンション
                 // リプライのカウント
                 if (isset($item['post']['record']['reply'])) {
                     $daily_data[$date]['replies_count'] = ($daily_data[$date]['replies_count'] ?? 0) + 1;
