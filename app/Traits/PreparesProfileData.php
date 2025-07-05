@@ -78,10 +78,10 @@ trait PreparesProfileData {
             ->get()
             ->map(function ($archive) {
                 return [
-                    'year'     => $archive->year,
-                    'month'     => $archive->month,
+                    'year'  => $archive->year,
+                    'month' => $archive->month,
                     'ym'    => $archive->year_month,
-                    'label' => substr($archive->year_month, 0, 4) . '年' . substr($archive->year_month, 4, 2) . '月',
+                    'label' => sprintf('%d年%02d月', $archive->year, $archive->month),
                     'count' => $archive->count,
                 ];
             });
