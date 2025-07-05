@@ -22,24 +22,33 @@
 
     @if(isset($archives) && count($archives) > 0)
         <div class="mt-8 bg-white shadow-md rounded-lg p-3">
-            <h2 class="text-xl font-bold mb-4">アーカイブ</h2>
-            <ul class="list-disc pl-5">
+            <h2 class="text-xl font-bold pl-2 pb-2 border-b border-gray-300">アーカイブ</h2>
+            <div class="w-full">
                 @foreach($archives as $archive)
-                    <li>
-                        <a href="{{ route('profile.show', ['handle' => $handle, 'archive_ym' => $archive['ym']]) }}"
-                           class="text-blue-500 hover:underline">
-                            {{ $archive['label'] }}
-                        </a>
-                        ({{ number_format($archive['count']) }})
-                    </li>
+                    <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                        <div class="flex-grow text-left pl-2">
+                            <a href="{{ route('profile.show', ['handle' => $handle, 'archive_ym' => $archive['ym']]) }}"
+                               class="text-blue-500 hover:underline">
+                                {{ $archive['label'] }}
+                            </a>
+                        </div>
+                        <div class="flex-none text-right pl-2">
+                            {{ number_format($archive['count']) }}
+                        </div>
+                    </div>
                 @endforeach
-            </ul>
+            </div>
+            <div class="mt-2 text-right">
+{{--                <a href="{{ route('profile.replies', ['handle' => $handle]) }}" class="text-blue-500 hover:underline">--}}
+                    すべてを表示
+{{--                </a>--}}
+            </div>
         </div>
     @endif
 
     @if(isset($top_replies) && $top_replies->count() > 0)
         <div class="mt-8 bg-white shadow-md rounded-lg p-3">
-            <h2 class="text-xl font-bold mb-4 pl-2 pb-2 border-b border-gray-300">リプライ</h2>
+            <h2 class="text-xl font-bold pl-2 pb-2 border-b border-gray-300">リプライ</h2>
             <div class="w-full">
                 @foreach($top_replies as $reply)
                     <div class="flex items-center justify-between py-2 border-b border-gray-200 sidebar-reply-profile-link">
@@ -80,9 +89,9 @@
                     </div>
                 @endforeach
             </div>
-            <div class="mt-4">
+            <div class="mt-2 text-right">
                 <a href="{{ route('profile.replies', ['handle' => $handle]) }}" class="text-blue-500 hover:underline">
-                    全てを表示
+                    すべてを表示
                 </a>
             </div>
         </div>
@@ -90,21 +99,25 @@
 
     @if(isset($top_hashtags) && $top_hashtags->count() > 0)
         <div class="mt-8 bg-white shadow-md rounded-lg p-3">
-            <h2 class="text-xl font-bold mb-4">ハッシュタグ</h2>
-            <ul class="list-disc pl-5">
+            <h2 class="text-xl font-bold pl-2 pb-2 border-b border-gray-300">ハッシュタグ</h2>
+            <div class="w-full">
                 @foreach($top_hashtags as $hashtag)
-                    <li>
-                        <a href="https://bsky.app/search?q=%23{{ $hashtag->tag }}" target="_blank"
-                           class="text-blue-500 hover:underline">
-                            #{{ $hashtag->tag }}
-                        </a>
-                        ({{ number_format($hashtag->count) }})
-                    </li>
+                    <div class="flex items-center justify-between py-2 border-b border-gray-200 ">
+                        <div class="flex-grow text-left pl-2">
+                            <a href="https://bsky.app/search?q=%23{{ $hashtag->tag }}" target="_blank"
+                               class="text-blue-500 hover:underline">
+                                #{{ $hashtag->tag }}
+                            </a>
+                        </div>
+                        <div class="flex-none text-right pl-2">
+                            {{ number_format($hashtag->count) }}
+                        </div>
+                    </div>
                 @endforeach
-            </ul>
-            <div class="mt-4">
+            </div>
+            <div class="mt-2 text-right">
                 <a href="{{ route('profile.hashtags', ['handle' => $handle]) }}" class="text-blue-500 hover:underline">
-                    全ハッシュタグランキングを見る
+                    すべてを表示
                 </a>
             </div>
         </div>
