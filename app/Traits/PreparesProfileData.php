@@ -42,12 +42,7 @@ trait PreparesProfileData {
             ->orderBy('reply_count', 'desc')
             ->orderBy('reply_to_handle', 'asc')
             ->limit(10)
-            ->get()
-            ->map(function ($reply) {
-                $bluelog_user = User::where('handle', $reply->reply_to_handle)->first();
-                $reply->is_bluelog_user = ($bluelog_user !== null);
-                return $reply;
-            });
+            ->get();
 
         // ハッシュタグランキング上位を取得
         $top_hashtags = Hashtag::whereHas('post', function ($query) use ($user) {
@@ -90,7 +85,7 @@ trait PreparesProfileData {
             'did'          => $profile_data['did'],
             'handle'       => $profile_data['handle'],
             'profile'      => $profile_data,
-            'top_replies' => $top_replies,
+            'top_replies'  => $top_replies,
             'top_hashtags' => $top_hashtags,
             'daily_stats'  => $daily_stats,
             'archives'     => $archives,

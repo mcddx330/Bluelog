@@ -42,39 +42,30 @@
             <h2 class="text-xl font-bold mb-4 pl-2 pb-2 border-b border-gray-300">リプライ</h2>
             <div class="w-full">
                 @foreach($top_replies as $reply)
-                    <div class="flex items-center justify-between py-2 border-b border-gray-200 sidebar-reply-profile-link"
-                        @if($reply->is_bluelog_user)
-                            x-data="{}"
-                            @mouseover="$el.querySelector('i').classList.remove('fa-solid'); $el.querySelector('i').classList.add('fa-regular'); $el.classList.add('bg-blue-100')"
-                            @mouseout="$el.querySelector('i').classList.remove('fa-regular'); $el.querySelector('i').classList.add('fa-solid'); $el.classList.remove('bg-blue-100')"
-                        @else
-                            @mouseover="$el.classList.add('bg-blue-100')"
-                            @mouseout="$el.classList.remove('bg-blue-100')"
-                        @endif
-                    >
+                    <div class="flex items-center justify-between py-2 border-b border-gray-200 sidebar-reply-profile-link">
                         <div class="flex-none text-right pr-2">
-                            @if($reply->is_bluelog_user)
+                            @if($reply->reply_to_user)
                                 <a href="{{ route('profile.show', ['handle' => $reply->reply_to_handle]) }}">
                             @endif
                                 <span class="text-blue-950 p-2
-                                    @if($reply->is_bluelog_user)
+                                    @if($reply->reply_to_user)
                                         hover:bg-blue-100
                                     @endif
                                  ">
                                 <i class="fa-user
-                                    @if($reply->is_bluelog_user)
+                                    @if($reply->reply_to_user)
                                         fa-solid
                                     @else
                                         fa-regular
                                    @endif
                                 "></i>
-                            @if($reply->is_bluelog_user)
+                            @if($reply->reply_to_user)
                                 </a>
                             @endif
                         </div>
                         <div class="flex-grow text-left">
                             <a
-                                @if($reply->is_bluelog_user)
+                                @if($reply->reply_to_user)
                                     href="{{ route('profile.show', ['handle' => $reply->reply_to_handle]) }}"
                                 @else
                                     href="https://bsky.app/profile/{{ $reply->reply_to_handle }}"

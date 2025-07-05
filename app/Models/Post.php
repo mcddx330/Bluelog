@@ -57,6 +57,7 @@ use App\Models\Hashtag;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Hashtag> $hashtags
  * @property-read int|null $hashtags_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Post wherePostedDateOnly($value)
+ * @property-read \App\Models\User|null $reply_to_user
  * @mixin \Eloquent
  */
 class Post extends Model {
@@ -154,5 +155,10 @@ class Post extends Model {
     public function hashtags(): HasMany
     {
         return $this->hasMany(Hashtag::class);
+    }
+
+    public function reply_to_user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reply_to_handle', 'handle');
     }
 }
