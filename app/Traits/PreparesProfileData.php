@@ -32,8 +32,6 @@ trait PreparesProfileData {
             'created_at'      => $user->registered_at ? $user->registered_at->toIso8601String() : null,
         ];
 
-        $is_fetching = $user->isFetchingData();
-
         // リプライランキング上位を取得
         $top_replies = Post::where('did', $user->did)
             ->whereNotNull('reply_to_handle')
@@ -67,12 +65,21 @@ trait PreparesProfileData {
 
         // アーカイブリストを取得
         $archives = Post::where('did', $user->did)
-            ->selectRaw('strftime("%Y%m", posted_at) as year_month, COUNT(*) as count')
+            ->selectRaw(implode(
+                ',', [
+                    'strftime("%Y", posted_at) as year',
+                    'strftime("%m", posted_at) as month',
+                    'strftime("%Y%m", posted_at) as year_month',
+                    'COUNT(*) as count',
+                ]
+            ))
             ->groupBy('year_month')
             ->orderBy('year_month', 'desc')
             ->get()
             ->map(function ($archive) {
                 return [
+                    'year'     => $archive->year,
+                    'month'     => $archive->month,
                     'ym'    => $archive->year_month,
                     'label' => substr($archive->year_month, 0, 4) . '年' . substr($archive->year_month, 4, 2) . '月',
                     'count' => $archive->count,
@@ -80,7 +87,7 @@ trait PreparesProfileData {
             });
 
         return [
-            'is_fetching'  => $is_fetching,
+            'is_fetching'  => $user->isFetchingData(),
             'user'         => $user,
             'did'          => $profile_data['did'],
             'handle'       => $profile_data['handle'],

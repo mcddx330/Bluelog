@@ -39,9 +39,9 @@
                 @endforeach
             </div>
             <div class="mt-2 text-right">
-{{--                <a href="{{ route('profile.replies', ['handle' => $handle]) }}" class="text-blue-500 hover:underline">--}}
+                <a href="{{ route('profile.archives', ['handle' => $handle]) }}" class="text-blue-500 hover:underline">
                     すべてを表示
-{{--                </a>--}}
+                </a>
             </div>
         </div>
     @endif
