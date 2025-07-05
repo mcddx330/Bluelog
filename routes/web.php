@@ -27,3 +27,4 @@ Route::get('/{handle}/status', [StatusController::class, 'show'])->name('profile
 Route::get('/{handle}/replies', [BlueskyController::class, 'showReplies'])->name('profile.replies');
 Route::get('/{handle}/hashtags', [App\Http\Controllers\HashtagController::class, 'index'])->name('profile.hashtags');
 Route::get('/{handle}/archives', [App\Http\Controllers\BlueskyArchivesController::class, 'show'])->name('profile.archives');
+Route::post('/{handle}/update-profile-data', [BlueskyController::class, 'updateProfileData'])->name('profile.updateProfileData');

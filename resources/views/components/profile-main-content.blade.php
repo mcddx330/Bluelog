@@ -51,41 +51,60 @@
         </div>
     </div>
 </div>
-<div class="
-    bg-white
-    shadow-md
-    p-3
-    @if(Route::currentRouteName() !== 'profile.show')
-        rounded-b-lg
-    @endif
-">
+<div
+    id="header-main-links"
+    class="
+        bg-white
+        shadow-md
+        p-3
+        @if(Route::currentRouteName() !== 'profile.show')
+            rounded-b-lg
+        @endif
+    ">
     <div class="pl-3 pr-3">
-        <div class="flex space-x-4 rounded-lg text-black">
-            <div class="bg-opacity-50 p-2 rounded-md">
-                <span class="font-bold">{{ $profile['followers_count'] ?? 0 }}</span>
-                <span class="">フォロワー</span>
+        <div class="flex justify-between items-center rounded-lg text-black">
+            <div class="flex space-x-4">
+                <div class="bg-opacity-50 p-2 rounded-md">
+                    <span class="font-bold">{{ $profile['followers_count'] ?? 0 }}</span>
+                    <span class="">フォロワー</span>
+                </div>
+                <div class="bg-opacity-50 p-2 rounded-md">
+                    <span class="font-bold">{{ $profile['follows_count'] ?? 0 }}</span>
+                    <span class="">フォロー</span>
+                </div>
+                <div class="bg-opacity-50 p-2 rounded-md">
+                    <a href="{{ route('profile.show', ['handle' => $profile['handle']]) }}" class="text-blue-600 hover:underline">
+                        <span class="font-bold">{{ $profile['posts_count'] }}</span>
+                        <span class="">ポスト</span>
+                    </a>
+                </div>
+                <div class="bg-opacity-50 p-2 rounded-md">
+                    <a href="{{ route('profile.likes', ['handle' => $profile['handle']]) }}" class="text-blue-600 hover:underline">
+                        <span class="font-bold">{{ $profile['likes_count'] }}</span>
+                        <span class="">いいね</span>
+                    </a>
+                </div>
+                <div class="bg-opacity-50 p-2 rounded-md">
+                    <a href="{{ route('profile.status', ['handle' => $profile['handle']]) }}" class="text-blue-600 hover:underline">
+                        <span class="font-bold">ステータス</span>
+                    </a>
+                </div>
             </div>
-            <div class="bg-opacity-50 p-2 rounded-md">
-                <span class="font-bold">{{ $profile['follows_count'] ?? 0 }}</span>
-                <span class="">フォロー</span>
-            </div>
-            <div class="bg-opacity-50 p-2 rounded-md">
-                <a href="{{ route('profile.show', ['handle' => $profile['handle']]) }}" class="text-blue-600 hover:underline">
-                    <span class="font-bold">{{ $profile['posts_count'] }}</span>
-                    <span class="">ポスト</span>
-                </a>
-            </div>
-            <div class="bg-opacity-50 p-2 rounded-md">
-                <a href="{{ route('profile.likes', ['handle' => $profile['handle']]) }}" class="text-blue-600 hover:underline">
-                    <span class="font-bold">{{ $profile['likes_count'] }}</span>
-                    <span class="">いいね</span>
-                </a>
-            </div>
-            <div class="bg-opacity-50 p-2 rounded-md">
-                <a href="{{ route('profile.status', ['handle' => $profile['handle']]) }}" class="text-blue-600 hover:underline">
-                    <span class="font-bold">ステータス</span>
-                </a>
-            </div>
+            @if(Auth::user()?->did === $profile['did'])
+                <div>
+                    <form action="{{ route('profile.updateProfileData', ['handle' => $profile['handle']]) }}" method="POST">
+                        @csrf
+                        <button
+                            type="submit"
+                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                            title="最終更新日: {{ Auth::user()->last_fetched_at
+                                ? Auth::user()->last_fetched_at->format('Y/m/d H:i:s')
+                                : '-' }}">
+                            最新状態に更新
+                        </button>
+                    </form>
+                </div>
+            @endif
         </div>
     </div>
 </div>

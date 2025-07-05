@@ -237,7 +237,8 @@ class BlueskyController extends Controller {
 
             // プロフィールビューにデータを渡して表示します。
             return view('profile', array_merge([
-                'posts' => $posts,
+                'posts'           => $posts,
+                'last_fetched_at' => $user->last_fetched_at, // 最終更新日をビューに渡す
             ], $this->prepareCommonProfileData($user)));
         } catch (\Exception $e) {
             // エラーが発生した場合は、デバッグ情報を出力し、エラーメッセージと共に前のページに戻ります。
@@ -312,5 +313,25 @@ class BlueskyController extends Controller {
         $request->session()->regenerateToken(); // 新しいCSRFトークンを再生成します。
 
         return redirect('/'); // ログアウト後にリダイレクトするパス。
+    }
+
+    /**
+     * プロフィールデータを最新の状態に更新します。
+     *
+     * @param string $handle 更新するユーザーのハンドル名。
+     *
+     * @return \Illuminate\Http\RedirectResponse プロフィール表示ページへのリダイレクトレスポンス。
+     */
+    public function updateProfileData(string $handle) {
+        $user = User::where('handle', $handle)->firstOrFail();
+
+        // status:aggregate コマンドを非同期で実行
+        dispatch(function () use ($user) {
+            Artisan::call('status:aggregate', [
+                '--did' => $user->did,
+            ]);
+        })->onQueue('default');
+
+        return redirect()->route('profile.show', ['handle' => $handle])->with('status', 'データ更新を開始しました。');
     }
 }

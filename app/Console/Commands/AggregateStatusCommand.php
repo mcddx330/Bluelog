@@ -16,17 +16,28 @@ use Revolution\Bluesky\Session\LegacySession;
 use App\Models\Media;
 
 class AggregateStatusCommand extends Command {
-    protected $signature   = 'status:aggregate';
+    protected $signature = '
+        status:aggregate
+        {--did= : The DID of the user to aggregate data for (optional)}
+    ';
+
     protected $description = 'Blueskyユーザーのアクティビティを取得し、集計します。';
 
     public function handle(): void {
         $this->output->writeln('<info>Blueskyステータス集計を開始します...</info>');
 
-        // is_fetching が false のユーザーのみ取得
-        $users = User::query()
-            ->where('is_fetching', false)
-            ->orWhereNull('is_fetching')
-            ->get();
+        $did = $this->option('did');
+
+        /** @var \Illuminate\Database\Eloquent\Builder $users クエリビルダー */
+        $users = User::where('did', $did);
+        if (empty($did)) {
+            $users = User::query()
+                ->where('is_fetching', false)
+                ->orWhereNull('is_fetching');
+        }
+
+        /** @var \Illuminate\Database\Eloquent\Collection<User> $users ユーザーのコレクション */
+        $users = $users->get();
 
         if ($users->isEmpty()) {
             $this->output->writeln('<comment>処理対象のユーザーがありません。</comment>');
