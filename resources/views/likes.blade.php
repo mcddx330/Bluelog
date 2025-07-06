@@ -14,7 +14,7 @@
         </div>
     @endif
 
-    <x-profile-main-content :profile="$profile" :handle="$handle"/>
+    <x-profile-main-content :user="$user" :profile="$profile" :handle="$handle"/>
 
     <div class="mt-8">
         <h1 class="text-2xl font-bold">{{ "@". $handle }} のいいね一覧</h1>

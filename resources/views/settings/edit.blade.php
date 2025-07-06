@@ -4,7 +4,7 @@
 
 @section('content')
     <x-is-fetching-message :is_fetching="$is_fetching"/>
-    <x-profile-main-content :profile="$profile" :handle="$handle"/>
+    <x-profile-main-content :user="$user" :profile="$profile" :handle="$handle"/>
 
     <h1 class="text-2xl font-bold mb-4">設定</h1>
 

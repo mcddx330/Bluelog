@@ -2,6 +2,7 @@
     'daily_stats',
     'profile',
     'handle',
+    'user',
 ])
 
 <div class="relative bg-cover bg-center rounded-t-lg overflow-hidden shadow-md"
@@ -88,13 +89,16 @@
                 </div>
             </div>
             @php
-                $last_updated_at = Auth::user()?->last_fetched_at->format('Y/m/d H:i:s') ?? '-';
+                $last_fetched_at = Auth::user()?->last_fetched_at;
+                if (is_null($last_fetched_at)) {
+                    $last_fetched_at = $user->last_fetched_at;
+                }
+                $last_fetched_at = $last_fetched_at?->format('Y/m/d H:i:s') ?? '-';
             @endphp
             <div class="text-sm">
-                <span class="">BlueSky活動歴：{{ number_format(Auth::user()->total_days_from_registered_bluesky) }}日</span>
+                <span class="">BlueSky活動歴：{{ number_format($user->total_days_from_registered_bluesky) }}日</span>
                 @if(Auth::user()?->did === $profile['did'])
-                    /
-                    <span class="">最終更新：{{ $last_updated_at }}</span>
+                    <span class="">最終更新：{{ $last_fetched_at }}</span>
                 @endif
             </div>
         </div>

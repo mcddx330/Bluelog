@@ -131,7 +131,7 @@
 
 @section('content')
     {{-- 仮のprofileデータとis_fetchingを渡します。実際のアプリケーションではコントローラで設定してください。 --}}
-    <x-profile-main-content :profile="$profile" :handle="$handle"/>
+    <x-profile-main-content :user="$user" :profile="$profile" :handle="$handle"/>
 
     <div class="mt-8">
         <div class="bg-white shadow-md rounded-lg p-6 mb-6">

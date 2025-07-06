@@ -37,7 +37,7 @@
     @if(isset($profile))
         <x-is-fetching-message :is_fetching="$is_fetching"/>
 
-        <x-profile-main-content :profile="$profile" :handle="$handle" :daily_stats="$daily_stats" />
+        <x-profile-main-content :user="$user" :profile="$profile" :handle="$handle" :daily_stats="$daily_stats" />
 
         <div class="lg:flex lg:space-x-8 mt-8">
             <x-profile-posts-section :posts="$posts" :handle="$handle" :current_sort="request('sort', 'posted_at_desc')"
