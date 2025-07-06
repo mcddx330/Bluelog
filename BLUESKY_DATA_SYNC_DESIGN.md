@@ -53,9 +53,9 @@
 ### 3.2. 主要コンポーネント
 
 - **Controller (`BlueskyController`):** ユーザー認証、初回ジョブの投入、DBに保存されたデータの表示を担当。
-- **Job (`FetchProfile`, `FetchPosts`):** Bluesky APIとの通信、データ取得、DBへの保存という重い処理を担当。
-- **Command (`SyncUserData`):** 全ユーザーのデータ同期ジョブを定期的に投入する役割。
-- **Scheduler (`app/Console/Kernel.php`):** `SyncUserData` コマンドの実行スケジュールを定義。
+- **Job (`AggregateStatusCommand`):** Bluesky APIとの通信、データ取得、DBへの保存という重い処理を担当。
+- **Command (`AggregateStatusCommand`):** 全ユーザーのデータ同期ジョブを定期的に投入する役割。
+- **Scheduler (`app/Console/Kernel.php`):** `AggregateStatusCommand` コマンドの実行スケジュールを定義。
 - **Model (`User`, `Post`):** データベースとのやり取りを担当。
 
 ## 4. 詳細設計
@@ -73,44 +73,55 @@ Schema::table('users', function (Blueprint $table) {
 });
 ```
 
+**現状と今後の課題:**
+
+上記のマイグレーションは設計段階で提案されたものですが、現在の実装では `users` テーブルに `post_fetch_cursor` および `like_fetch_cursor` カラムは追加されていません。データ同期の効率化のためにはこれらのカーソルを永続化し、差分更新に利用することが不可欠です。
+
+**今後の対応:**
+
+*   `post_fetch_cursor` および `like_fetch_cursor` カラムを `users` テーブルに追加するマイグレーションを実行する。
+*   `AggregateStatusCommand` 内でこれらのカーソルを適切に利用し、Bluesky APIからのデータ取得時に差分更新ロジックを実装する。
+
 ### 4.2. データ同期処理の実装
 
-#### a. 投稿取得ジョブ (`app/Jobs/FetchPosts.php`)
+#### a. データ集計コマンド (`app/Console/Commands/AggregateStatusCommand.php`)
 
-- `User` モデルをコンストラクタで受け取ります。
-- `revolution/laravel-bluesky` を使用して `accessJwt` をリフレッシュします。
-- `users` テーブルの `post_fetch_cursor` を利用して `getAuthorFeed` を呼び出します。
-- 取得した投稿を `posts` テーブルに `updateOrCreate` で保存します。（`uri` をキーにする）
-- APIレスポンスに含まれる新しい `cursor` を `users` テーブルの `post_fetch_cursor` に保存します。
-- APIの100件制限を超える場合は、`cursor` を使いながら複数回リクエストを送信します。
+- `User` モデルを元に、Bluesky APIからプロフィール、投稿、いいねなどのデータを取得します。
+- 取得したデータは、`users`, `posts`, `likes`, `media`, `hashtags`, `daily_stats` テーブルに保存されます。
+- `is_fetching` フラグを使用して、データ取得中のユーザーをマークします。
+- Bluesky APIの `cursor` を利用し、効率的な差分更新を行います。
+- `accessJwt` が期限切れの場合、`refreshJwt` を使用して自動的に更新されます。
 
-#### b. 定期実行コマンド (`app/Console/Commands/SyncUserData.php`)
+#### b. 定期実行コマンド (`app/Console/Commands/AggregateStatusCommand.php`)
 
-- `User::all()` などで同期対象の全ユーザーを取得します。
-- 各ユーザーに対して `FetchPosts::dispatch($user)` のようにジョブを投入します。
-- （将来的にはプロフィール更新やいいね取得のジョブもここから投入します）
+- `php artisan status:aggregate` コマンドを実行することで、全ユーザーのデータ同期が開始されます。
+- このコマンドは、`is_fetching` フラグが `false` のユーザー、または `is_fetching` が `null` のユーザーを対象にデータを取得します。
+- 特定のユーザーのデータを取得する場合は、`--did` オプションを使用します。
 
 #### c. スケジューラへの登録 (`app/Console/Kernel.php`)
 
 ```php
 protected function schedule(Schedule $schedule): void
 {
-    // 毎時0分にユーザーデータ同期コマンドを実行
-    $schedule->command('app:sync-user-data')->hourly();
+    // 毎時0分にユーザーデータ集計コマンドを実行
+    $schedule->command('status:aggregate')->hourly();
 }
 ```
 
 #### d. ログイン処理の変更 (`app/Http/Controllers/BlueskyController.php`)
 
-`doLogin` メソッド内で、ユーザー情報をDBに保存した直後に、初回のデータ取得ジョブを投入します。
+`doLogin` メソッド内で、ユーザー情報をDBに保存した直後に、`status:aggregate` コマンドを非同期で実行します。
 
 ```php
 // ... ログイン処理
 $user = User::updateOrCreate(...);
 
-// 初回データ取得ジョブを投入
-\App\Jobs\FetchPosts::dispatch($user);
-// \App\Jobs\FetchLikes::dispatch($user); // 必要であれば
+// 初回データ取得コマンドを非同期実行
+dispatch(function () use ($user) {
+    Artisan::call('status:aggregate', [
+        '--did' => $user->did,
+    ]);
+})->onQueue('default');
 
 Auth::login($user);
 
@@ -139,11 +150,10 @@ public function showProfile(string $handle)
 ## 5. 実装ステップ案
 
 1.  `users` テーブルにカーソル用カラムを追加するマイグレーションを作成・実行する。
-2.  `php artisan make:job FetchPosts` でジョブクラスを作成し、投稿取得ロジックを実装する。
-3.  `php artisan make:command SyncUserData` でコマンドクラスを作成し、全ユーザーに対してジョブを投入するロジックを実装する。
-4.  `app/Console/Kernel.php` に作成したコマンドをスケジュール登録する。
-5.  `BlueskyController@doLogin` に、初回ジョブ投入の処理を追加する。
-6.  キューワーカー (`php artisan queue:work`) を起動して、ジョブが正常に処理されることを確認する。
-7.  `BlueskyController@showProfile` を、データベースからデータを表示するようリファクタリングする。
+2.  `app/Console/Commands/AggregateStatusCommand.php` にデータ集計ロジックを実装する。
+3.  `app/Console/Kernel.php` に `status:aggregate` コマンドをスケジュール登録する。
+4.  `BlueskyController@doLogin` に、初回データ取得コマンドの非同期実行処理を追加する。
+5.  キューワーカー (`php artisan queue:work`) を起動して、コマンドが正常に処理されることを確認する。
+6.  `BlueskyController@showProfile` を、データベースからデータを表示するようリファクタリングする。
 
 以上が、提案するデータ同期の設計です。この設計により、効率的でスケーラブルなデータ収集基盤を構築できます。

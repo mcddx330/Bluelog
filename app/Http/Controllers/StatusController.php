@@ -8,19 +8,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Traits\PreparesProfileData;
 
-class StatusController extends Controller
-{
+class StatusController extends Controller {
     use PreparesProfileData;
+
     /**
      * 指定されたハンドルのユーザーの統計情報を表示します。
      * データベースから日ごとの統計データを取得し、集計してビューに渡します。
      *
-     * @param  string  $handle 表示するユーザーのハンドル名。
-     * @param  \Illuminate\Http\Request  $request HTTPリクエストオブジェクト。
+     * @param string                   $handle 表示するユーザーのハンドル名。
+     * @param \Illuminate\Http\Request $request HTTPリクエストオブジェクト。
+     *
      * @return \Illuminate\Contracts\View\View 統計情報ビュー。
      */
-    public function show(string $handle, Request $request)
-    {
+    public function show(string $handle, Request $request) {
         // ハンドル名に基づいてユーザーをデータベースから検索します。見つからない場合は例外をスローします。
         $user = User::where('handle', $handle)->firstOrFail();
 
@@ -39,6 +39,7 @@ class StatusController extends Controller
             ->get()
             ->map(function ($stat) {
                 $stat->date = \Carbon\Carbon::parse($stat->date)->startOfDay();
+
                 return $stat;
             });
 
@@ -47,7 +48,6 @@ class StatusController extends Controller
         $total_likes = $stats->sum('likes_count');
         $total_replies = $stats->sum('replies_count');
         $total_reposts = $stats->sum('reposts_count');
-        $total_replies = $stats->sum('replies_count');
 
         // 投稿があった日数の計算
         $days_with_posts = $stats->where('posts_count', '>', 0)->count();
@@ -90,14 +90,13 @@ class StatusController extends Controller
         }
 
         // グラフ描画用のデータを準備するクロージャ
-        $prepare_chart_data = function($collection) {
+        $prepare_chart_data = function ($collection) {
             return [
-                'labels' => $collection->pluck('date')->map(fn($date) => $date->toDateString())->toArray(),
-                'posts' => $collection->pluck('posts_count')->toArray(),
-                'likes' => $collection->pluck('likes_count')->toArray(),
+                'labels'  => $collection->pluck('date')->map(fn($date) => $date->toDateString())->toArray(),
+                'posts'   => $collection->pluck('posts_count')->toArray(),
+                'likes'   => $collection->pluck('likes_count')->toArray(),
                 'replies' => $collection->pluck('replies_count')->toArray(),
                 'reposts' => $collection->pluck('reposts_count')->toArray(),
-                'replies' => $collection->pluck('replies_count')->toArray(),
             ];
         };
 
@@ -120,7 +119,6 @@ class StatusController extends Controller
                 'total_likes'              => $total_likes,
                 'total_replies'            => $total_replies,
                 'total_reposts'            => $total_reposts,
-                'total_replies'           => $total_replies,
                 'days_with_posts'          => $days_with_posts,
                 'days_without_posts'       => $days_without_posts,
                 'max_posts_per_day'        => $max_posts_per_day,

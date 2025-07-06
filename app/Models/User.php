@@ -7,7 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
- * 
+ *
  *
  * @property string                          $did
  * @property string                          $handle
@@ -23,8 +23,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property \Illuminate\Support\Carbon|null $last_fetched_at
  * @property string|null                     $access_jwt
  * @property string|null                     $refresh_jwt
- * @property string|null                     $post_fetch_cursor
- * @property string|null                     $like_fetch_cursor
  * @property bool                            $is_private
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -47,8 +45,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereIsPrivate($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastFetchedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastLoginAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLikeFetchCursor($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePostFetchCursor($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePostsCount($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRefreshJwt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRegisteredAt($value)

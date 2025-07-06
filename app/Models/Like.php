@@ -71,6 +71,7 @@ class Like extends Model
         'post_uri',
         'cid', // BlueskyのレコードCID
         'created_by_did', // いいねされた投稿の作成者のDID
+        'post_posted_at', // いいねしたポストの投稿日時
         'created_at', // いいねが作成された日時
     ];
 
