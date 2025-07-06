@@ -14,7 +14,23 @@
         </div>
     @endif
 
-    <div class="bg-white shadow-md rounded-lg p-6">
+    <div class="bg-white shadow-md rounded-lg p-6 mt-6">
+        <h2 class="text-xl font-bold mb-4">データ更新</h2>
+        <p class="text-sm text-gray-500 mb-2">
+            手動でBlueSkyからデータを取得し、最新状態にします。
+        </p>
+        <form action="{{ route('profile.updateProfileData', ['handle' => $profile['handle']]) }}" method="POST">
+            @csrf
+            <button
+                type="submit"
+                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                最新状態に更新
+            </button>
+        </form>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg p-6 mt-6">
+        <h2 class="text-xl font-bold mb-4">Bluelogの非公開</h2>
         <form action="{{ route('settings.update') }}" method="POST">
             @csrf
             @method('PUT')

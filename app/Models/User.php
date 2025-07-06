@@ -56,6 +56,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Post> $posts
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Like> $likes
  * @property-read int|null $likes_count
+ * @property-read int $total_days_from_registered_bluesky
  * @mixin \Eloquent
  */
 class User extends Authenticatable {
@@ -150,5 +151,9 @@ class User extends Authenticatable {
 
     public function likes(): HasMany {
         return $this->hasMany(Like::class, 'did', 'did');
+    }
+
+    public function getTotalDaysFromRegisteredBlueskyAttribute(): int {
+        return (int)$this->registered_at->diffInDays(now());
     }
 }

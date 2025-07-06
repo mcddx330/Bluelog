@@ -57,9 +57,6 @@
         bg-white
         shadow-md
         p-3
-        @if(Route::currentRouteName() !== 'profile.show')
-            rounded-b-lg
-        @endif
     ">
     <div class="pl-3 pr-3">
         <div class="flex justify-between items-center rounded-lg text-black">
@@ -90,30 +87,28 @@
                     </a>
                 </div>
             </div>
-            @if(Auth::user()?->did === $profile['did'])
-                <div>
-                    <form action="{{ route('profile.updateProfileData', ['handle' => $profile['handle']]) }}" method="POST">
-                        @csrf
-                        <button
-                            type="submit"
-                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                            title="最終更新日: {{ Auth::user()->last_fetched_at
-                                ? Auth::user()->last_fetched_at->format('Y/m/d H:i:s')
-                                : '-' }}">
-                            最新状態に更新
-                        </button>
-                    </form>
-                </div>
-            @endif
+            @php
+                $last_updated_at = Auth::user()?->last_fetched_at->format('Y/m/d H:i:s') ?? '-';
+            @endphp
+            <div class="text-sm">
+                <span class="">BlueSky活動歴：{{ number_format(Auth::user()->total_days_from_registered_bluesky) }}日</span>
+                @if(Auth::user()?->did === $profile['did'])
+                    /
+                    <span class="">最終更新：{{ $last_updated_at }}</span>
+                @endif
+            </div>
         </div>
     </div>
 </div>
-<div class="bg-white shadow-md rounded-b-lg pb-3 pl-3 pr-3">
-    <div id="heatmap-container" class="flex flex-wrap gap-1">
-        <!-- Heatmap cells will be generated here -->
+
+@if(Route::currentRouteName() === 'profile.show')
+    <div class="bg-white shadow-md rounded-b-lg pb-3 pl-3 pr-3">
+        <div id="heatmap-container" class="flex flex-wrap gap-1">
+            <!-- Heatmap cells will be generated here -->
+        </div>
+        <div id="heatmap-tooltip" class="absolute bg-gray-800 text-white text-xs p-2 rounded-md shadow-lg hidden z-50"></div>
     </div>
-    <div id="heatmap-tooltip" class="absolute bg-gray-800 text-white text-xs p-2 rounded-md shadow-lg hidden z-50"></div>
-</div>
+@endif
 
 @if(Route::currentRouteName() === 'profile.show')
     @push('scripts')
