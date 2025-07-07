@@ -35,6 +35,9 @@
                 :chart_data_30="$chart_data_30"
                 :chart_data_60="$chart_data_60"
                 :chart_data_90="$chart_data_90"
+                :posts_by_day_of_week="$posts_by_day_of_week"
+                :posts_by_hour="$posts_by_hour"
+                :cumulative_posts="$cumulative_posts"
             />
             <x-profile-sidebar :user="$user" :handle="$handle" :archives="$archives" :top_replies="$top_replies" :top_hashtags="$top_hashtags"/>
         </div>

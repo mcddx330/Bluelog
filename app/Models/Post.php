@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Hashtag;
+use App\Models\Traits\HasDatabaseSpecificQueries;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * 
@@ -58,10 +59,12 @@ use App\Models\Hashtag;
  * @property-read int|null $hashtags_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Post wherePostedDateOnly($value)
  * @property-read \App\Models\User|null $reply_to_user
+ * @method static \Illuminate\Database\Eloquent\Builder|Post postsCountByDayOfWeek(string $did)
+ * @method static \Illuminate\Database\Eloquent\Builder|Post postsCountByHour(string $did)
  * @mixin \Eloquent
  */
 class Post extends Model {
-    use HasFactory;
+    use HasFactory, HasDatabaseSpecificQueries;
 
     /**
      * このモデルに関連付けられているテーブル名。
@@ -160,5 +163,35 @@ class Post extends Model {
     public function reply_to_user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reply_to_handle', 'handle');
+    }
+
+    /**
+     * Scope a query to return posts count by day of week for a given DID.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $did
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopePostsCountByDayOfWeek(Builder $query, string $did): Builder
+    {
+        return $query->where('did', $did)
+            ->selectRaw("{$this->getDayOfWeekSql()} as day_of_week, COUNT(*) as count")
+            ->groupBy('day_of_week')
+            ->orderBy('day_of_week', 'asc');
+    }
+
+    /**
+     * Scope a query to return posts count by hour for a given DID.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $did
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopePostsCountByHour(Builder $query, string $did): Builder
+    {
+        return $query->where('did', $did)
+            ->selectRaw("{$this->getHourSql()} as hour, COUNT(*) as count")
+            ->groupBy('hour')
+            ->orderBy('hour', 'asc');
     }
 }

@@ -24,6 +24,9 @@
     'chart_data_30',
     'chart_data_60',
     'chart_data_90',
+    'posts_by_day_of_week',
+    'posts_by_hour',
+    'cumulative_posts',
 ])
 
 <div class="lg:w-2/3">
@@ -134,6 +137,27 @@
                 <canvas id="dailyActivityChart"></canvas>
             </div>
         </div>
+
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">曜日別アクティビティグラフ</h2>
+            <div class="w-full" style="height: 200px;">
+                <canvas id="postsByDayOfWeekChart"></canvas>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">時間帯別アクティビティグラフ</h2>
+            <div class="w-full" style="height: 200px;">
+                <canvas id="postsByHourChart"></canvas>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">累計ポスト推移グラフ</h2>
+            <div class="w-full" style="height: 200px;">
+                <canvas id="cumulativePostsChart"></canvas>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -147,6 +171,9 @@
             const CHART_DATA_30 = JSON.parse('{!! $chart_data_30->toJson() !!}');
             const CHART_DATA_60 = JSON.parse('{!! $chart_data_60->toJson() !!}');
             const CHART_DATA_90 = JSON.parse('{!! $chart_data_90->toJson() !!}');
+            const POSTS_BY_DAY_OF_WEEK = JSON.parse('{!! $posts_by_day_of_week->toJson() !!}');
+            const POSTS_BY_HOUR = JSON.parse('{!! $posts_by_hour->toJson() !!}');
+            const CUMULATIVE_POSTS = JSON.parse('{!! $cumulative_posts->toJson() !!}');
 
             const CHART_DATA_MAP = {
                 'all': CHART_DATA_ALL,
@@ -155,10 +182,10 @@
                 '90' : CHART_DATA_90,
             };
 
-            const ctx = document.getElementById('dailyActivityChart').getContext('2d');
+            const ctx_daily = document.getElementById('dailyActivityChart').getContext('2d');
             let daily_activity_chart;
 
-            function update_chart(period) {
+            function update_daily_chart(period) {
                 const data_to_display = CHART_DATA_MAP[String(period)];
 
                 if (!data_to_display) {
@@ -219,15 +246,144 @@
                     }
                 };
 
-                daily_activity_chart = new Chart(ctx, chart_config);
+                daily_activity_chart = new Chart(ctx_daily, chart_config);
             }
 
             document.getElementById('periodSelect').addEventListener('change', (event) => {
-                update_chart(event.target.value);
+                update_daily_chart(event.target.value);
             });
 
             // 初期表示
-            update_chart('30');
+            update_daily_chart('30');
+
+            // 曜日別アクティビティグラフ
+            const ctx_day_of_week = document.getElementById('postsByDayOfWeekChart').getContext('2d');
+            new Chart(ctx_day_of_week, {
+                type   : 'bar',
+                data   : {
+                    labels  : Object.keys(POSTS_BY_DAY_OF_WEEK),
+                    datasets: [
+                        {
+                            label          : '投稿数',
+                            data           : Object.values(POSTS_BY_DAY_OF_WEEK),
+                            backgroundColor: 'rgba(153, 102, 255, 0.8)',
+                            borderColor    : 'rgb(153, 102, 255)',
+                            borderWidth    : 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive         : true,
+                    maintainAspectRatio: false,
+                    plugins            : {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales             : {
+                        y: {
+                            beginAtZero: true,
+                            title      : {
+                                display: true,
+                                text   : '件数'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 時間帯別アクティビティグラフ
+            const ctx_hour = document.getElementById('postsByHourChart').getContext('2d');
+            new Chart(ctx_hour, {
+                type   : 'bar',
+                data   : {
+                    labels  : Object.keys(POSTS_BY_HOUR),
+                    datasets: [
+                        {
+                            label          : '投稿数',
+                            data           : Object.values(POSTS_BY_HOUR),
+                            backgroundColor: 'rgba(255, 159, 64, 0.8)',
+                            borderColor    : 'rgb(255, 159, 64)',
+                            borderWidth    : 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive         : true,
+                    maintainAspectRatio: false,
+                    plugins            : {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales             : {
+                        x: {
+                            title: {
+                                display: true,
+                                text   : '時間帯'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title      : {
+                                display: true,
+                                text   : '件数'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 累計ポスト推移グラフ
+            const ctx_cumulative = document.getElementById('cumulativePostsChart').getContext('2d');
+            new Chart(ctx_cumulative, {
+                type   : 'line',
+                data   : {
+                    labels  : CUMULATIVE_POSTS.map(item => item.date),
+                    datasets: [
+                        {
+                            label          : '累計投稿数',
+                            data           : CUMULATIVE_POSTS.map(item => item.cumulative_posts_count),
+                            borderColor    : 'rgb(255, 99, 132)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            tension        : 0.1,
+                            fill           : true
+                        }
+                    ]
+                },
+                options: {
+                    responsive         : true,
+                    maintainAspectRatio: false,
+                    plugins            : {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales             : {
+                        x: {
+                            type : 'time',
+                            time : {
+                                unit          : 'day',
+                                tooltipFormat : 'YYYY-MM-DD',
+                                displayFormats: {
+                                    day: 'YYYY-MM-DD'
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text   : '日付'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title      : {
+                                display: true,
+                                text   : '累計件数'
+                            }
+                        }
+                    }
+                }
+            });
         });
     </script>
 @endpush

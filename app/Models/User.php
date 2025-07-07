@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable; // 追加
 
 /**
- *
+ * 
  *
  * @property string                          $did
  * @property string                          $handle
@@ -54,6 +54,8 @@ use Illuminate\Notifications\Notifiable; // 追加
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Like> $likes
  * @property-read int|null $likes_count
  * @property-read int $total_days_from_registered_bluesky
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
+ * @property-read int|null $notifications_count
  * @mixin \Eloquent
  */
 class User extends Authenticatable {

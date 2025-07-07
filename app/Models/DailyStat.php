@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
+ * 
+ *
  * @property int                             $id
  * @property string                          $did
  * @property \Illuminate\Support\Carbon      $date

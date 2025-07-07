@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DailyStat;
+use App\Models\Post;
 use App\Models\User;
 use App\Traits\BuildViewBreadcrumbs;
 use Illuminate\Http\Request;
@@ -150,6 +151,31 @@ class StatusController extends Controller {
         $chart_data_60 = $prepare_chart_data($last_60_days_stats);
         $chart_data_90 = $prepare_chart_data($last_90_days_stats);
 
+        // 曜日別投稿数
+        $posts_by_day_of_week = Post::postsCountByDayOfWeek($user->did)
+            ->get()
+            ->mapWithKeys(function ($item) {
+                $days = ['日', '月', '火', '水', '木', '金', '土'];
+                return [$days[$item->day_of_week] => $item->count];
+            });
+
+        // 時間帯別投稿数
+        $posts_by_hour = Post::postsCountByHour($user->did)
+            ->get()
+            ->mapWithKeys(function ($item) {
+                return [sprintf('%02d時', $item->hour) => $item->count];
+            });
+
+        // 累計ポスト推移
+        $cumulative_posts = $stats->map(function ($stat) use ($stats) {
+            static $cumulative_sum = 0;
+            $cumulative_sum += $stat->posts_count;
+            return [
+                'date' => $stat->date->toDateString(),
+                'cumulative_posts_count' => $cumulative_sum,
+            ];
+        });
+
         // 統計情報ビューにデータを渡して表示します。
         try {
             return view('status.show', array_merge([
@@ -181,6 +207,9 @@ class StatusController extends Controller {
                 'chart_data_30'            => $chart_data_30,
                 'chart_data_60'            => $chart_data_60,
                 'chart_data_90'            => $chart_data_90,
+                'posts_by_day_of_week'     => $posts_by_day_of_week,
+                'posts_by_hour'            => $posts_by_hour,
+                'cumulative_posts'         => $cumulative_posts
             ], $this->prepareCommonProfileData($user)));
         } catch (\JsonException $e) {
             Log::error(sprintf(
