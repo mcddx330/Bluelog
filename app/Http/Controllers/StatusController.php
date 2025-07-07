@@ -85,6 +85,43 @@ class StatusController extends Controller {
         // 1日あたりの平均投稿数を計算
         $average_posts_per_day = $days_with_posts > 0 ? round($total_posts / $days_with_posts, 2) : 0;
 
+        // ツイート文字数関連
+        $total_text_length = 0;
+        $posts_with_text_count = 0;
+        $user_posts = \App\Models\Post::where('did', $user->did)->get();
+
+        foreach ($user_posts as $post) {
+            $cleaned_text = $post->text;
+            // URLを除外
+            $cleaned_text = preg_replace('/https?:\/\/\S+/', '', $cleaned_text);
+            // @ユーザー名を除外 (Blueskyハンドル形式に対応)
+            $cleaned_text = preg_replace('/@[\p{L}\p{N}.-]+\.[\p{L}]{2,}/u', '', $cleaned_text);
+            // #ハッシュタグを除外
+            $cleaned_text = preg_replace('/#([\p{L}\p{N}_]+)/u', '', $cleaned_text);
+            // スペースと改行を除外
+            $cleaned_text = preg_replace('/\s+/', '', $cleaned_text);
+
+            $text_length = mb_strlen($cleaned_text);
+            $total_text_length += $text_length;
+            if ($text_length > 0) {
+                $posts_with_text_count++;
+            }
+        }
+
+        $average_text_per_post = $posts_with_text_count > 0 ? round($total_text_length / $posts_with_text_count, 2) : 0;
+        $average_text_per_day = $period_days > 0 ? round($total_text_length / $period_days, 2) : 0;
+
+        // フォロー/フォロワー増加ペース
+        $days_since_registered = $user->registered_at ? $user->registered_at->diffInDays(now()) : 0;
+        $follower_growth_pace = $days_since_registered > 0 ? round($user->followers_count / $days_since_registered, 2) : 0;
+        $following_growth_pace = $days_since_registered > 0 ? round($user->following_count / $days_since_registered, 2) : 0;
+
+        // コミュニケーション率
+        $replied_posts_count = \App\Models\Post::where('did', $user->did)
+            ->whereNotNull('reply_to_handle')
+            ->count();
+        $communication_rate = $user->posts_count > 0 ? round(($replied_posts_count / $user->posts_count) * 100, 2) : 0;
+
         // フォロワー対フォロー比率を計算
         $follower_following_ratio = 0;
         if ($user->following_count > 0) {
@@ -133,7 +170,13 @@ class StatusController extends Controller {
                 'period_end'               => $period_end,
                 'period_days'              => $period_days,
                 'follower_following_ratio' => $follower_following_ratio,
-                'max_posts_per_day_date'   => $max_posts_per_day_date, // ここを追加
+                'max_posts_per_day_date'   => $max_posts_per_day_date,
+                'total_text_length'        => $total_text_length,
+                'average_text_per_post'    => $average_text_per_post,
+                'average_text_per_day'     => $average_text_per_day,
+                'follower_growth_pace'     => $follower_growth_pace,
+                'following_growth_pace'    => $following_growth_pace,
+                'communication_rate'       => $communication_rate,
                 'chart_data_all'           => $chart_data_all,
                 'chart_data_30'            => $chart_data_30,
                 'chart_data_60'            => $chart_data_60,

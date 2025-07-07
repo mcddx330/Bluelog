@@ -14,6 +14,12 @@
     'total_replies',
     'total_reposts',
     'follower_following_ratio',
+    'total_text_length',
+    'average_text_per_post',
+    'average_text_per_day',
+    'follower_growth_pace',
+    'following_growth_pace',
+    'communication_rate',
     'chart_data_all',
     'chart_data_30',
     'chart_data_60',
@@ -24,39 +30,91 @@
     <div class="space-y-4">
         <div class="mt-8 bg-white shadow-md rounded-lg p-6">
             <h2 class="text-xl font-bold mb-4">全体統計</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div><span
-                        class="font-semibold">Bluesky登録日時:</span> {{ $user->registered_at ? $user->registered_at->format('Y-m-d H:i:s') : 'N/A' }}
-                </div>
-                <div>
-                    <span class="font-semibold">Bluelog上における記録期間:</span>
-                    @php
-                        $period_start_carbon = $period_start instanceof \Carbon\Carbon
-                            ? $period_start
-                            : \Carbon\Carbon::parse($period_start);
-                        $period_end_carbon = $period_end instanceof \Carbon\Carbon
-                            ? $period_end
-                            : \Carbon\Carbon::parse($period_end);
-                    @endphp
-                    {{ $period_start_carbon ? $period_start_carbon->format('Y-m-d') . ' - ' . $period_end_carbon->format('Y-m-d') : 'N/A' }}
-                    ({{ number_format($period_days) }} 日間)
-                </div>
-                <div><span class="font-semibold">総投稿数:</span> {{ number_format($total_posts) }}</div>
-                <div><span class="font-semibold">つぶやいた日数:</span> {{ number_format($days_with_posts) }}</div>
-                <div><span class="font-semibold">つぶやかなかった日数:</span> {{ number_format($days_without_posts) }}</div>
-                <div><span class="font-semibold">一日の平均投稿数:</span> {{ number_format($average_posts_per_day, 2) }}</div>
-                <div>
-                    <span class="font-semibold">一日の最高投稿数:</span>
-                    {{ number_format($max_posts_per_day) }}
-                    @if($max_posts_per_day_date)
-                        ({{ $max_posts_per_day_date }})
-                    @endif
-                </div>
-                <div><span class="font-semibold">総いいね数:</span> {{ number_format($total_likes) }}</div>
-                <div><span class="font-semibold">総リプライ数:</span> {{ number_format($total_replies) }}</div>
-                <div><span class="font-semibold">総リポスト数:</span> {{ number_format($total_reposts) }}</div>
-                <div><span class="font-semibold">フォロワー/フォロー比率:</span> {{ number_format($follower_following_ratio, 2) }}</div>
-            </div>
+            <table class="min-w-full bg-white">
+                <tbody>
+                    <tr class="border-b">
+                        <td class="py-2 px-4 font-semibold">Bluesky登録日時:</td>
+                        <td class="py-2 px-4">{{ $user->registered_at ? $user->registered_at->format('Y/m/d H:i:s') : 'N/A' }}</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-2 px-4 font-semibold">Bluelog上における記録期間:</td>
+                        <td class="py-2 px-4">
+                            @php
+                                $period_start_carbon = $period_start instanceof \Carbon\Carbon
+                                    ? $period_start
+                                    : (is_string($period_start) ? \Carbon\Carbon::parse($period_start) : null);
+                                $period_end_carbon = $period_end instanceof \Carbon\Carbon
+                                    ? $period_end
+                                    : (is_string($period_end) ? \Carbon\Carbon::parse($period_end) : null);
+                            @endphp
+                            {{ $period_start_carbon->format('Y/m/d') }}
+                            〜
+                            {{ $period_end_carbon->format('Y/m/d') }}
+                            ({{ number_format($period_days) }} 日間)
+                        </td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-2 px-4 font-semibold">総投稿数:</td>
+                        <td class="py-2 px-4">{{ number_format($total_posts) }} 件</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-2 px-4 font-semibold">つぶやいた日数:</td>
+                        <td class="py-2 px-4">{{ number_format($days_with_posts) }} 日</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-2 px-4 font-semibold">つぶやかなかった日数:</td>
+                        <td class="py-2 px-4">{{ number_format($days_without_posts) }} 日</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-2 px-4 font-semibold">一日の平均投稿数:</td>
+                        <td class="py-2 px-4">{{ number_format($average_posts_per_day, 2) }} 件</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-2 px-4 font-semibold">一日の最高投稿数:</td>
+                        <td class="py-2 px-4">
+                            {{ number_format($max_posts_per_day) }} 件
+                            @if($max_posts_per_day_date)
+                                ({{ $max_posts_per_day_date }})
+                            @endif
+                        </td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-2 px-4 font-semibold">総いいね数:</td>
+                        <td class="py-2 px-4">{{ number_format($total_likes) }} 件</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-2 px-4 font-semibold">総リプライ数:</td>
+                        <td class="py-2 px-4">{{ number_format($total_replies) }} 件</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-2 px-4 font-semibold">総リポスト数:</td>
+                        <td class="py-2 px-4">{{ number_format($total_reposts) }} 件</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-2 px-4 font-semibold">フォロワー/フォロー比率:</td>
+                        <td class="py-2 px-4">{{ number_format($follower_following_ratio, 2) }} 倍</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-2 px-4 font-semibold">総ツイート文字数:</td>
+                        <td class="py-2 px-4">
+                            {{ number_format($total_text_length) }} 文字
+                            ({{ number_format($average_text_per_post, 2) }} 文字/件  {{ number_format($average_text_per_day, 2) }} 文字/日)
+                        </td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-2 px-4 font-semibold">フォロー増加ペース (1日あたり):</td>
+                        <td class="py-2 px-4">{{ number_format($following_growth_pace, 2) }} 人</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-2 px-4 font-semibold">フォロワー増加ペース (1日あたり):</td>
+                        <td class="py-2 px-4">{{ number_format($follower_growth_pace, 2) }} 人</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-2 px-4 font-semibold">コミュニケーション率:</td>
+                        <td class="py-2 px-4">{{ number_format($communication_rate, 2) }} %</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
         <div class="bg-white shadow-md rounded-lg p-6 mb-6">
