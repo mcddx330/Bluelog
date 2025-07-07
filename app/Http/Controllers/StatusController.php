@@ -93,13 +93,13 @@ class StatusController extends Controller {
 
         // グラフ描画用のデータを準備するクロージャ
         $prepare_chart_data = function ($collection) {
-            return [
-                'labels'  => $collection->pluck('date')->map(fn($date) => $date->toDateString())->toArray(),
-                'posts'   => $collection->pluck('posts_count')->toArray(),
-                'likes'   => $collection->pluck('likes_count')->toArray(),
-                'replies' => $collection->pluck('replies_count')->toArray(),
-                'reposts' => $collection->pluck('reposts_count')->toArray(),
-            ];
+            return collect([
+                'labels'  => $collection->pluck('date')->map(fn($date) => $date->toDateString()),
+                'posts'   => $collection->pluck('posts_count'),
+                'likes'   => $collection->pluck('likes_count'),
+                'replies' => $collection->pluck('replies_count'),
+                'reposts' => $collection->pluck('reposts_count'),
+            ]);
         };
 
         // 全期間、過去30日、60日、90日のグラフデータを準備
@@ -134,10 +134,10 @@ class StatusController extends Controller {
                 'period_days'              => $period_days,
                 'follower_following_ratio' => $follower_following_ratio,
                 'max_posts_per_day_date'   => $max_posts_per_day_date, // ここを追加
-                'chart_data_all'           => json_encode($chart_data_all, JSON_THROW_ON_ERROR),
-                'chart_data_30'            => json_encode($chart_data_30, JSON_THROW_ON_ERROR),
-                'chart_data_60'            => json_encode($chart_data_60, JSON_THROW_ON_ERROR),
-                'chart_data_90'            => json_encode($chart_data_90, JSON_THROW_ON_ERROR),
+                'chart_data_all'           => $chart_data_all,
+                'chart_data_30'            => $chart_data_30,
+                'chart_data_60'            => $chart_data_60,
+                'chart_data_90'            => $chart_data_90,
             ], $this->prepareCommonProfileData($user)));
         } catch (\JsonException $e) {
             Log::error(sprintf(
