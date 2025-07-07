@@ -106,7 +106,7 @@
     </div>
 </div>
 
-@if(Route::currentRouteName() === 'profile.show')
+@if(Route::currentRouteName() === 'profile.show' && !$daily_stats->isEmpty())
     <div class="bg-white shadow-md rounded-b-lg pb-3 pl-3 pr-3">
         <div id="heatmap-container" class="flex flex-wrap gap-1">
             <!-- Heatmap cells will be generated here -->

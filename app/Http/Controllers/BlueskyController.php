@@ -129,7 +129,7 @@ class BlueskyController extends Controller {
             $profile_response = Bluesky::getProfile($handle);
             $profile_data = json_decode($profile_response->getBody(), true);
 
-            DB::transaction(function () use ($did, $handle, $profile_data, $access_jwt, $refresh_jwt) {
+            $user = DB::transaction(function () use ($did, $handle, $profile_data, $access_jwt, $refresh_jwt) {
                 // ユーザー情報をデータベースに保存または更新します。
                 // DIDをキーとして、既存のユーザーがいれば更新、いなければ新規作成します。
                 $user = User::updateOrCreate(
@@ -152,13 +152,16 @@ class BlueskyController extends Controller {
 
                 // 認証されたユーザーとしてセッションにログイン情報を保存します。
                 Auth::login($user);
+
+                return $user;
             });
 
-            // ログイン成功時にstatus:aggregateコマンドを非同期実行
-            dispatch(function () {
-                Artisan::call('status:aggregate');
-            })->onQueue('default');
-
+            // 初回ログイン時にstatus:aggregateコマンドを非同期実行
+            if (($user instanceof User) && !($user->posts->count() > 0)) {
+                dispatch(function () {
+                    Artisan::call('status:aggregate');
+                })->onQueue('default');
+            }
 
             // プロフィール表示ページへリダイレクトします。
             return redirect()->route('profile.show', [
@@ -171,6 +174,7 @@ class BlueskyController extends Controller {
                 $e->getLine(),
                 $e->getMessage()
             ));
+
             return back()->with('error', 'プロフィール表示中にエラーが発生しました。詳細についてはログを確認してください。');
         }
     }
@@ -182,12 +186,12 @@ class BlueskyController extends Controller {
      *
      * @return \Illuminate\Http\RedirectResponse リダイレクトレスポンス。
      */
-    public function markNotificationsAsRead(Request $request)
-    {
+    public function markNotificationsAsRead(Request $request) {
         $user = Auth::user();
         if ($user) {
             $user->unreadNotifications->markAsRead();
         }
+
         return back();
     }
 
@@ -197,7 +201,7 @@ class BlueskyController extends Controller {
      *
      * @param string $handle 表示するユーザーのハンドル名。
      *
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\Response プロフィールビューまたはエラーレスポンス。
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Http\Response|\Illuminate\Routing\Redirector|object
      */
     public function showProfile(string $handle, Request $request) {
         try {
@@ -274,7 +278,8 @@ class BlueskyController extends Controller {
                 $e->getLine(),
                 $e->getMessage()
             ));
-            return back()->with('error', 'プロフィール表示中にエラーが発生しました。詳細についてはログを確認してください。');
+
+            return redirect(route('index'))->with('error', 'プロフィール表示中にエラーが発生しました。詳細についてはログを確認してください。');
         }
     }
 
@@ -328,6 +333,7 @@ class BlueskyController extends Controller {
                 $e->getLine(),
                 $e->getMessage()
             ));
+
             return back()->with('error', 'リプライ表示中にエラーが発生しました。詳細についてはログを確認してください。');
         }
     }

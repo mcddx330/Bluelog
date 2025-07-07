@@ -10,6 +10,14 @@ Bluelogは、Blueskyの特定のユーザーの投稿や「いいね」を収集
 
 Bluelogは、Laravelフレームワークを基盤とし、Bluesky API連携ライブラリを活用して構築されています。詳細な技術スタックについては、プロジェクトルートの `GEMINI.md` を参照してください。
 
+### 2.1. 開発環境の起動
+
+Bluelogの開発環境を起動する際は、**必ず `npm run dev` コマンドを使用してください。**
+
+このコマンドは、Laravel開発サーバー (`php artisan serve`)、フロントエンドのアセットをビルド・提供するVite、そしてバックグラウンドジョブを処理するキューワーカー (`php artisan queue:listen`) を同時に起動します。
+
+`php artisan serve` 単独ではWebサーバーのみが起動し、キューワーカーは起動しません。そのため、`dispatch()` などでキューに投入されたジョブ（例: Blueskyからのデータ取得処理）が実行されず、アプリケーションの完全な動作を確認できません。キューワーカーの詳細な設定やタイムアウトについては、「5.4. キューワーカーの管理とタイムアウト設定」を参照してください。
+
 ## 3. Bluesky連携とデータ管理の概要
 
 Bluelogの核となる機能は、Bluesky APIとのセキュアな連携と、取得したデータの効率的な管理によって実現されます。
@@ -85,6 +93,49 @@ Bluelogのサービス稼働初期段階においては、システムの安定�
     *   **今後の課題:** さらなる堅牢性向上のため、回復処理（リトライなど）や、より詳細なエラー分類に基づくハンドリングの導入を検討します。
 *   **パフォーマンス最適化:** 大規模なデータ量やユーザー数に対応するため、データベースクエリの最適化、キャッシュ戦略の導入、非同期処理の活用などにより、アプリケーション全体のパフォーマンス向上を図ります。
 *   **スケーラビリティの向上:** ユーザー数の増加に対応できるよう、水平スケーリングを考慮したアーキテクチャ設計や、クラウドサービスの活用を検討します。
+
+### 5.4. キューワーカーの管理とタイムアウト設定
+
+Bluelogでは、Blueskyからのデータ取得など時間のかかる処理を非同期で実行するためにキューワーカーを利用します。キューワーカーの安定稼働と適切なタイムアウト設定は、アプリケーションの信頼性にとって重要です。
+
+*   **キューワーカーの役割:**
+    *   `dispatch()` 関数や `Artisan::call()` を用いてキューに投入されたジョブ（例: `status:aggregate` コマンド）をバックグラウンドで処理します。
+    *   Webリクエストの処理とは独立して動作するため、ユーザー体験を損なうことなく重い処理を実行できます。
+
+*   **開発環境での起動とタイムアウト設定:**
+    *   **重要:** 開発環境では、Laravel開発サーバー、Vite、キューワーカーなどをまとめて起動するため、`php artisan serve` の単独実行ではなく、必ず `npm run dev` コマンドを使用してください。
+    *   `npm run dev` コマンドを実行することで、Laravel開発サーバー、Vite、そしてキューワーカー (`php artisan queue:listen`) が同時に起動します。
+    *   キューワーカーのタイムアウトは、`composer.json` の `scripts.dev` 内で `php artisan queue:listen` コマンドに `--timeout` オプションを指定することで設定されます。
+    *   例: `"php artisan queue:listen --tries=1 --timeout=300"` (300秒 = 5分)
+    *   この設定により、開発中に長時間かかるジョブが途中で強制終了されることを防ぎます。
+
+*   **本番環境での起動とタイムアウト設定:**
+    *   本番環境では、キューワーカーを常時稼働させるためにSupervisorなどのプロセス管理ツールを使用することが推奨されます。
+    *   Supervisorの設定ファイル内で、`php artisan queue:work` または `php artisan queue:listen` コマンドに `--timeout` オプションを指定してタイムアウトを設定します。
+    *   **例 (Supervisor設定):**
+        ```ini
+        [program:bluelog-worker]
+        process_name=%(program_name)s_%(process_num)02d
+        command=php /path/to/bluelog/artisan queue:work --timeout=300 --tries=3 --sleep=3
+        autostart=true
+        autorestart=true
+        user=www-data ; または適切なユーザー名
+        numprocs=1   ; 必要に応じてワーカー数を増やす
+        redirect_stderr=true
+        stdout_logfile=/path/to/bluelog/storage/logs/worker.log
+        stopwaitsecs=300 ; ジョブが終了するまで待つ最大時間 (timeoutと同じかそれ以上が望ましい)
+        ```
+    *   **ジョブクラスごとのタイムアウト:** 特定のジョブのみ実行時間が長い場合は、そのジョブクラス内で `$timeout` プロパティを設定することも可能です。この設定はコマンドラインオプションよりも優先されます。
+        ```php
+        class MyLongRunningJob implements ShouldQueue
+        {
+            public $timeout = 600; // このジョブは600秒まで実行可能
+            // ...
+        }
+        ```
+    *   **`retry_after` と `timeout` の違い:**
+        *   `--timeout` オプションやジョブクラスの `$timeout` プロパティは、ワーカーがジョブを強制終了するまでの時間です。
+        *   `config/queue.php` に設定される `retry_after` は、ジョブが「失敗した」と見なされ、別のワーカーによって再試行されるまでの時間です。通常、`--timeout` や `$timeout` の値を `retry_after` よりも大きく設定することで、ジョブが完了する前に再試行されるのを防ぎます。
 
 ## 6. コードルール
 

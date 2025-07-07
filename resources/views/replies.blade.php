@@ -10,7 +10,7 @@
 
         <div class="lg:flex lg:space-x-8 mt-8">
             <x-replies-list-section :replies="$replies" :sort_by="$sort_by" :order="$order" :handle="$handle" />
-            <x-profile-sidebar :handle="$handle" :archives="$archives" :top_replies="$top_replies" :top_hashtags="$top_hashtags"/>
+            <x-profile-sidebar :user="$user" :handle="$handle" :archives="$archives" :top_replies="$top_replies" :top_hashtags="$top_hashtags"/>
         </div>
     </div>
 
