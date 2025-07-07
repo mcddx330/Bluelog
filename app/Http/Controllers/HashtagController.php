@@ -18,22 +18,30 @@ class HashtagController extends Controller {
     public function index(Request $request, string $handle): View {
         $user = User::where('handle', $handle)->firstOrFail();
 
+        $sort_by = $request->input('sort_by', 'count'); // 'count' or 'tag'
+        $order = $request->input('order', 'desc'); // 'asc' or 'desc'
+
         $hashtags = Hashtag::select('tag')
             ->selectRaw('count(*) as count')
             ->whereHas('post', function ($query) use ($user) {
                 $query->where('did', $user->did);
             })
-            ->groupBy('tag')
-            ->orderByDesc('count')
-            ->orderBy('tag')
-            ->paginate(50);
+            ->groupBy('tag');
+
+        if ($sort_by === 'tag') {
+            $hashtags->orderBy('tag', $order);
+        } else { // default sort by count
+            $hashtags->orderBy('count', $order);
+            $hashtags->orderBy('tag', 'asc'); // Secondary sort
+        }
+
+        $hashtags = $hashtags->paginate(50);
 
         return view('hashtags', array_merge([
             'breadcrumbs' => $this
                 ->addBreadcrumb($user->handle, route('profile.show', ['handle' => $user->handle]))
                 ->addBreadcrumb('ハッシュタグ')
                 ->getBreadcrumbs(),
-            'user'        => $user,
             'hashtags'    => $hashtags,
         ], $this->prepareCommonProfileData($user)));
     }
