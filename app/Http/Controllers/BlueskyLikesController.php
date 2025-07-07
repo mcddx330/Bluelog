@@ -3,25 +3,24 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Traits\BuildViewBreadcrumbs;
 use Exception;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Revolution\Bluesky\Facades\Bluesky;
 use App\Traits\PreparesProfileData;
 
-class BlueskyLikesController extends BlueskyController
-{
-    use PreparesProfileData;
+class BlueskyLikesController extends BlueskyController {
+    use PreparesProfileData, BuildViewBreadcrumbs;
+
     /**
      * 指定されたハンドルのユーザーの「いいね」履歴を表示します。
      * データベースから「いいね」データを取得し、ビューに渡します。
      *
-     * @param  string  $handle 表示するユーザーのハンドル名。
+     * @param string $handle 表示するユーザーのハンドル名。
+     *
      * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse 「いいね」履歴ビューまたはリダイレクトレスポンス。
      */
-    public function show(string $handle)
-    {
+    public function show(string $handle) {
         // Blueskyセッションが存在する場合、セッションを再開します。
         if ($this->getBlueskySession()) {
             $this->resumeSession();
@@ -59,9 +58,13 @@ class BlueskyLikesController extends BlueskyController
 
             // 「いいね」履歴ビューにデータを渡して表示します。
             return view('likes', array_merge([
-                'handle' => $handle,
-                'posts' => $posts,
+                'handle'           => $handle,
+                'posts'            => $posts,
                 'likes_pagination' => $likes, // ページネーション情報をビューに渡します。
+                'breadcrumbs'      => $this
+                    ->addBreadcrumb($user->handle, route('profile.show', ['handle' => $user->handle]))
+                    ->addBreadcrumb('いいね')
+                    ->getBreadcrumbs(),
             ], $this->prepareCommonProfileData($user)));
         } catch (Exception $e) {
             Log::error(sprintf(
@@ -70,6 +73,7 @@ class BlueskyLikesController extends BlueskyController
                 $e->getLine(),
                 $e->getMessage()
             ));
+
             return back()->with('error', 'いいね表示中にエラーが発生しました。詳細についてはログを確認してください。');
         }
     }

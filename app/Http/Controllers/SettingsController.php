@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Traits\BuildViewBreadcrumbs;
 use App\Traits\PreparesProfileData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,7 +14,7 @@ use App\Providers\AppServiceProvider;
 use League\Csv\Writer;
 
 class SettingsController extends Controller {
-    use PreparesProfileData;
+    use PreparesProfileData, BuildViewBreadcrumbs;
 
     /**
      * ユーザー設定の編集フォームを表示します。
@@ -21,10 +23,18 @@ class SettingsController extends Controller {
      */
     public function edit() {
         $user = Auth::user();
+        if (!($user instanceof User)) {
+            abort(404);
+        }
+
+        $breadcrumbs = $this
+            ->addBreadcrumb('@' . $user->handle, route('profile.show', ['handle' => $user->handle]))
+            ->addBreadcrumb('設定')
+            ->getBreadcrumbs();
 
         return view(
             'settings.edit', array_merge(
-            compact('user'),
+            compact('user', 'breadcrumbs'),
         ), $this->prepareCommonProfileData($user));
     }
 

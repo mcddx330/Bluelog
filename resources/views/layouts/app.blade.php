@@ -33,6 +33,11 @@
                 </form>
             </div>
         @endif
+
+        @if(isset($breadcrumbs) && is_array($breadcrumbs))
+            <x-breadcrumbs :breadcrumbs="$breadcrumbs" />
+        @endif
+
         @yield('content')
     </div>
     @stack('scripts')

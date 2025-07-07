@@ -4,16 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Hashtag;
 use App\Models\User;
+use App\Traits\BuildViewBreadcrumbs;
+use App\Traits\PreparesProfileData;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-class HashtagController extends Controller
-{
+class HashtagController extends Controller {
+    use PreparesProfileData, BuildViewBreadcrumbs;
+
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request, string $handle): View
-    {
+    public function index(Request $request, string $handle): View {
         $user = User::where('handle', $handle)->firstOrFail();
 
         $hashtags = Hashtag::select('tag')
@@ -26,9 +28,13 @@ class HashtagController extends Controller
             ->orderBy('tag')
             ->paginate(50);
 
-        return view('hashtags', [
-            'user' => $user,
-            'hashtags' => $hashtags,
-        ]);
+        return view('hashtags', array_merge([
+            'breadcrumbs' => $this
+                ->addBreadcrumb($user->handle, route('profile.show', ['handle' => $user->handle]))
+                ->addBreadcrumb('ハッシュタグ')
+                ->getBreadcrumbs(),
+            'user'        => $user,
+            'hashtags'    => $hashtags,
+        ], $this->prepareCommonProfileData($user)));
     }
 }

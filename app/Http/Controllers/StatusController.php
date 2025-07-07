@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\DailyStat;
 use App\Models\User;
+use App\Traits\BuildViewBreadcrumbs;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Traits\PreparesProfileData;
 
 class StatusController extends Controller {
-    use PreparesProfileData;
+    use PreparesProfileData, BuildViewBreadcrumbs;
 
     /**
      * 指定されたハンドルのユーザーの統計情報を表示します。
@@ -115,6 +116,10 @@ class StatusController extends Controller {
         // 統計情報ビューにデータを渡して表示します。
         try {
             return view('status.show', array_merge([
+                'breadcrumbs'              => $this
+                    ->addBreadcrumb($user->handle, route('profile.show', ['handle' => $user->handle]))
+                    ->addBreadcrumb('ステータス')
+                    ->getBreadcrumbs(),
                 'stats'                    => $stats,
                 'total_posts'              => $total_posts,
                 'total_likes'              => $total_likes,
@@ -141,6 +146,7 @@ class StatusController extends Controller {
                 $e->getLine(),
                 $e->getMessage()
             ));
+
             return back()->with('error', '統計情報表示中にエラーが発生しました。詳細についてはログを確認してください。');
         }
     }

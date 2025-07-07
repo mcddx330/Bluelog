@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use App\Models\User;
+use App\Traits\BuildViewBreadcrumbs;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Log;
 use Revolution\Bluesky\BlueskyManager;
 use Revolution\Bluesky\Facades\Bluesky;
@@ -18,7 +18,7 @@ use Revolution\Bluesky\Session\LegacySession;
 use App\Traits\PreparesProfileData;
 
 class BlueskyController extends Controller {
-    use PreparesProfileData;
+    use PreparesProfileData, BuildViewBreadcrumbs;
 
     /**
      * Blueskyセッション情報を保持するプロパティ。
@@ -266,10 +266,12 @@ class BlueskyController extends Controller {
                 $notifications = Auth::user()->unreadNotifications;
             }
 
+
             return view('profile', array_merge([
                 'posts'           => $posts,
                 'last_fetched_at' => $user->last_fetched_at, // 最終更新日をビューに渡す
                 'notifications'   => $notifications, // 未読通知をビューに渡す
+                'breadcrumbs'     => $this->addBreadcrumb($user->handle)->getBreadcrumbs(),
             ], $this->prepareCommonProfileData($user)));
         } catch (\Exception $e) {
             Log::error(sprintf(
@@ -321,10 +323,14 @@ class BlueskyController extends Controller {
             $replies = $replies->paginate(20)->appends(request()->query());
 
             return view('replies', array_merge([
-                'handle'  => $handle,
-                'replies' => $replies,
-                'sort_by' => $sort_by,
-                'order'   => $order,
+                'breadcrumbs' => $this
+                    ->addBreadcrumb($user->handle, route('profile.show', ['handle' => $user->handle]))
+                    ->addBreadcrumb('リプライ一覧')
+                    ->getBreadcrumbs(),
+                'handle'      => $handle,
+                'replies'     => $replies,
+                'sort_by'     => $sort_by,
+                'order'       => $order,
             ], $this->prepareCommonProfileData($user)));
         } catch (\Exception $e) {
             Log::error(sprintf(
