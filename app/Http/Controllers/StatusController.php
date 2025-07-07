@@ -6,6 +6,7 @@ use App\Models\DailyStat;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Traits\PreparesProfileData;
 
 class StatusController extends Controller {
@@ -134,7 +135,13 @@ class StatusController extends Controller {
                 'chart_data_90'            => json_encode($chart_data_90, JSON_THROW_ON_ERROR),
             ], $this->prepareCommonProfileData($user)));
         } catch (\JsonException $e) {
-            dd($e->getFile(), $e->getLine(), $e->getMessage(), $e->getTrace());
+            Log::error(sprintf(
+                '統計情報表示中にエラー: %s %d. %s',
+                $e->getFile(),
+                $e->getLine(),
+                $e->getMessage()
+            ));
+            return back()->with('error', '統計情報表示中にエラーが発生しました。詳細についてはログを確認してください。');
         }
     }
 }

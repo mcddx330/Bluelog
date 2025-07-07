@@ -98,6 +98,7 @@
             <div class="text-sm">
                 <span class="">BlueSky活動歴：{{ number_format($user->total_days_from_registered_bluesky) }}日</span>
                 @if(Auth::user()?->did === $profile['did'])
+                    /
                     <span class="">最終更新：{{ $last_fetched_at }}</span>
                 @endif
             </div>

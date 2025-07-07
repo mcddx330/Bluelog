@@ -12,6 +12,27 @@
 <body class="bg-gray-100">
     <x-header />
     <div class="container mx-auto p-4">
+        @if(session('error'))
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <strong class="font-bold">Error!</strong>
+                <span class="block sm:inline">{{ session('error') }}</span>
+            </div>
+        @endif
+
+        @if ($notifications?->count() > 0)
+            <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-4" role="alert">
+                @foreach ($notifications as $notification)
+                    <span class="block sm:inline">
+                        [{{ $notification->created_at->format('Y/m/d H:i') }}]
+                        {{ $notification->data['error_message'] ?? '不明な通知' }}
+                    </span>
+                @endforeach
+                <form action="{{ route('notifications.markAsRead') }}" method="POST" class="inline ml-4">
+                    @csrf
+                    <button type="submit" class="text-sm text-yellow-800 hover:underline">全て既読にする</button>
+                </form>
+            </div>
+        @endif
         @yield('content')
     </div>
     @stack('scripts')

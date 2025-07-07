@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Auth; // 追加
+use Illuminate\Support\Facades\View; // 追加
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -36,6 +38,22 @@ class AppServiceProvider extends ServiceProvider
     {
         Blade::directive('renderBlueskyText', function ($expression) {
             return "<?php echo \App\Providers\AppServiceProvider::renderBlueskyText($expression); ?>";
+        });
+
+        // 全てのビューで通知を利用可能にする
+        View::composer('*', function ($view) {
+            $notifications = collect();
+            if (Auth::check()) {
+                $notifications = Auth::user()->unreadNotifications;
+            } else {
+                // ログインしていない場合でも、セッションから通知を取得する（例: ログインページでのエラー通知など）
+                // ただし、notificationsテーブルに保存された通知はユーザーに紐づくため、このケースでは表示されない
+                // ここでは、セッションに保存された一時的な通知メッセージを想定
+                if (session()->has('error')) {
+                    $notifications->push((object)['data' => ['error_message' => session('error')]]);
+                }
+            }
+            $view->with('notifications', $notifications);
         });
     }
 

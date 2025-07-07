@@ -6,6 +6,7 @@ use App\Models\DailyStat;
 use App\Models\Like;
 use App\Models\Post;
 use App\Models\User;
+use App\Notifications\AggregateStatusFailedNotification;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -16,15 +17,12 @@ use Revolution\Bluesky\Session\LegacySession;
 use App\Models\Media;
 
 class AggregateStatusCommand extends Command {
-    protected $signature = '
-        status:aggregate
-        {--did= : The DID of the user to aggregate data for (optional)}
-    ';
+    protected $signature = 'status:aggregate {--did= : The DID of the user to aggregate data for (optional)}';
 
     protected $description = 'Blueskyユーザーのアクティビティを取得し、集計します。';
 
     public function handle(): void {
-        $this->output->writeln('<info>Blueskyステータス集計を開始します...</info>');
+        $this->info('Blueskyステータス集計を開始します...');
 
         $did = $this->option('did');
 
@@ -40,19 +38,20 @@ class AggregateStatusCommand extends Command {
         $users = $users->get();
 
         if ($users->isEmpty()) {
-            $this->output->writeln('<comment>処理対象のユーザーがありません。</comment>');
+            $this->comment('処理対象のユーザーがありません。');
 
             return;
         }
 
-        $this->output->writeln(sprintf('<info>%d 人のユーザーを処理します。</info>', $users->count()));
+        $this->info(sprintf('%d 人のユーザーを処理します。', $users->count()));
 
         foreach ($users as $user) {
-            $this->output->writeln(sprintf('<comment>==== ユーザー処理開始: %s ====</comment>', $user->handle));
+            $this->comment(sprintf('==== ユーザー処理開始: %s ====', $user->handle));
 
             try {
                 $bluesky = $this->prepareBlueskyClient($user);
-                $this->output->writeln(sprintf('<info>[Client] 準備完了: %s</info>', $user->handle));
+
+                $this->info(sprintf('[Client] 準備完了: %s', $user->handle));
 
                 DB::transaction(function () use ($user) {
                     $user->markFetching();
@@ -75,30 +74,34 @@ class AggregateStatusCommand extends Command {
                     $user->unmarkFetching();
                 });
 
-                $this->output->writeln(sprintf('<comment>==== ユーザー処理終了: %s ====</comment>', $user->handle));
-            } catch (\Throwable $e) {
-                Log::error(sprintf(
+                $this->comment(sprintf('==== ユーザー処理終了: %s ====', $user->handle));
+            } catch (\Exception $e) {
+                \Log::error(sprintf(
                     'ユーザー %s の集計中にエラー: %s %d . %s',
                     $user->handle,
                     $e->getFile(),
                     $e->getLine(),
                     $e->getMessage()
                 ));
-                $this->output->writeln(sprintf('<error>エラー: %s（詳細はログ）</error>', $e->getMessage()));
+
+                // ユーザーに通知を記録
+                $user->notify(new AggregateStatusFailedNotification(
+                    'データ集計時ににエラーが発生しました。設定より再取得を行ってください。'
+                ));
             } finally {
                 // フラグ解除と最終取得時刻更新を保証
                 $user->is_fetching = false;
                 $user->last_fetched_at = now();
                 $user->save();
-                $this->output->writeln(sprintf('<comment>最終取得時刻を更新: %s</comment>', $user->last_fetched_at));
+                $this->comment(sprintf('最終取得時刻を更新: %s', $user->last_fetched_at));
             }
         }
 
-        $this->output->writeln('<info>全ユーザーの集計処理が完了しました。</info>');
+        $this->info('全ユーザーの集計処理が完了しました。');
     }
 
     private function prepareBlueskyClient(User $user): BlueskyManager {
-        $this->output->writeln(sprintf('<comment>[prepare] セッションデータを作成: %s</comment>', $user->handle));
+        $this->comment(sprintf('[prepare] セッションデータを作成: %s', $user->handle));
         $session_data = [
             'accessJwt'  => $user->access_jwt,
             'refreshJwt' => $user->refresh_jwt,
@@ -108,17 +111,17 @@ class AggregateStatusCommand extends Command {
         $bluesky = Bluesky::withToken(LegacySession::create($session_data));
 
         try {
-            $this->output->writeln('<comment>[prepare] トークンチェック実施</comment>');
+            $this->comment('[prepare] トークンチェック実施');
             $bluesky->check();
         } catch (\Throwable) {
-            $this->output->writeln(sprintf('<comment>アクセストークン期限切れ: %s → リフレッシュ実施</comment>', $user->handle));
+            $this->comment(sprintf('アクセストークン期限切れ: %s → リフレッシュ実施', $user->handle));
             $response = $bluesky->refreshSession();
-            $this->output->writeln('<info>[prepare] トークンリフレッシュ完了</info>');
+            $this->info('[prepare] トークンリフレッシュ完了');
 
             $user->access_jwt = $response->access_jwt;
             $user->refresh_jwt = $response->refresh_jwt;
             $user->save();
-            $this->output->writeln('<comment>[prepare] 新しいトークンをユーザーに保存</comment>');
+            $this->comment('[prepare] 新しいトークンをユーザーに保存');
 
             // リフレッシュしたトークンでクライアントを再生成
             $bluesky = Bluesky::withToken(LegacySession::create([
@@ -133,7 +136,7 @@ class AggregateStatusCommand extends Command {
     }
 
     private function updateUserProfile(BlueskyManager $bluesky, User $user): void {
-        $this->output->writeln(sprintf('<comment>[profile] %s のプロフィール取得中...</comment>', $user->handle));
+        $this->comment(sprintf('[profile] %s のプロフィール取得中...', $user->handle));
         $profile_response = $bluesky->getProfile($user->handle);
         $profile_data = json_decode($profile_response->getBody(), true);
 
@@ -142,11 +145,11 @@ class AggregateStatusCommand extends Command {
         $user->avatar_url = $profile_data['avatar'] ?? $user->avatar_url;
         $user->banner_url = $profile_data['banner'] ?? $user->banner_url;
         $user->save();
-        $this->output->writeln(sprintf('<info>[profile] %s のプロフィールを更新しました。</info>', $user->handle));
+        $this->info(sprintf('[profile] %s のプロフィールを更新しました。', $user->handle));
     }
 
     private function fetchAndStorePosts(BlueskyManager $bluesky, User $user): array {
-        $this->output->writeln(sprintf('<comment>[posts] %s の投稿取得開始...</comment>', $user->handle));
+        $this->comment(sprintf('[posts] %s の投稿取得開始...', $user->handle));
         $daily_data = [];
         $cursor = null;
 
@@ -262,20 +265,20 @@ class AggregateStatusCommand extends Command {
                 $new_count++;
             }
 
-            $this->output->writeln(sprintf('<info>[posts] ページ取得完了 (新規%d件) cursor=%s</info>', $new_count, $cursor));
+            $this->info(sprintf('[posts] ページ取得完了 (新規%d件) cursor=%s', $new_count, $cursor));
         } while ($cursor);
 
         $total_posts = collect($daily_data)->sum('posts_count');
         $total_replies = collect($daily_data)->sum('replies_count');
         $total_reposts = collect($daily_data)->sum('reposts_count');
 
-        $this->output->writeln(sprintf('<info>[posts] 全体で新規投稿 %d件, リプライ %d件, リポスト %d件 を登録しました。</info>', $total_posts, $total_replies, $total_reposts));
+        $this->info(sprintf('[posts] 全体で新規投稿 %d件, リプライ %d件, リポスト %d件 を登録しました。', $total_posts, $total_replies, $total_reposts));
 
         return $daily_data;
     }
 
     private function fetchAndStoreLikes(BlueskyManager $bluesky, User $user): array {
-        $this->output->writeln(sprintf('<comment>[likes] %s のいいね取得開始...</comment>', $user->handle));
+        $this->comment(sprintf('[likes] %s のいいね取得開始...', $user->handle));
         $daily_data = [];
         $cursor = null;
 
@@ -321,21 +324,21 @@ class AggregateStatusCommand extends Command {
                 $new_count += 1;
             }
 
-            $this->output->writeln(sprintf(
-                '<info>[likes] ページ取得完了 (新規 %s件) cursor=%s</info>',
+            $this->info(sprintf(
+                '[likes] ページ取得完了 (新規 %s件) cursor=%s',
                 number_format($new_count),
                 $cursor
             ));
         } while ($cursor);
 
         $total = collect($daily_data)->sum();
-        $this->output->writeln(sprintf('<info>[likes] 全体で %s件の新規いいねを登録しました。</info>', number_format($total)));
+        $this->info(sprintf('[likes] 全体で %s件の新規いいねを登録しました。', number_format($total)));
 
         return $daily_data;
     }
 
     private function upsertDailyStats(User $user, array $post_daily_data, array $like_daily_data): void {
-        $this->output->writeln(sprintf('<comment>[stats] 日別統計のアップサート開始: %s</comment>', $user->handle));
+        $this->comment(sprintf('[stats] 日別統計のアップサート開始: %s', $user->handle));
         $dates = collect(array_keys($post_daily_data))->merge(array_keys($like_daily_data))->unique()->all();
         $total_post_count = 0;
         foreach ($dates as $date) {
@@ -350,8 +353,8 @@ class AggregateStatusCommand extends Command {
             $daily_stat->save();
             $total_post_count += $daily_stat->posts_count;
 
-            $this->output->writeln(
-                sprintf('<info>[stats] %s => posts:%d, likes:%d, replies:%d, reposts:%d</info>',
+            $this->info(
+                sprintf('[stats] %s => posts:%d, likes:%d, replies:%d, reposts:%d',
                     $date,
                     $daily_stat->posts_count,
                     $daily_stat->likes_count,
@@ -362,7 +365,7 @@ class AggregateStatusCommand extends Command {
         $user->posts_count = $total_post_count;
         $user->save();
 
-        $this->output->writeln('<info>[stats] 日別統計のアップサート完了</info>');
+        $this->info('[stats] 日別統計のアップサート完了');
     }
 
     private function storeMedia(Post $post, array $item): void {

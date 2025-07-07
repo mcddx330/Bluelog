@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Log;
 use Revolution\Bluesky\BlueskyManager;
 use Revolution\Bluesky\Facades\Bluesky;
 use Revolution\Bluesky\Session\AbstractSession;
@@ -163,11 +165,30 @@ class BlueskyController extends Controller {
                 'handle' => $handle,
             ]);
         } catch (\Exception $e) {
-            // エラーが発生した場合は、デバッグ情報を出力し、エラーメッセージと共に前のページに戻ります。
-            dd($e->getFile(), $e->getLine(), $e->getMessage(), $e->getTrace());
-
-            return back()->with('error', 'エラー: ' . $e->getMessage());
+            Log::error(sprintf(
+                'ログイン中にエラー: %s %d. %s',
+                $e->getFile(),
+                $e->getLine(),
+                $e->getMessage()
+            ));
+            return back()->with('error', 'プロフィール表示中にエラーが発生しました。詳細についてはログを確認してください。');
         }
+    }
+
+    /**
+     * ユーザーの通知を既読にします。
+     *
+     * @param \Illuminate\Http\Request $request HTTPリクエストオブジェクト。
+     *
+     * @return \Illuminate\Http\RedirectResponse リダイレクトレスポンス。
+     */
+    public function markNotificationsAsRead(Request $request)
+    {
+        $user = Auth::user();
+        if ($user) {
+            $user->unreadNotifications->markAsRead();
+        }
+        return back();
     }
 
     /**
@@ -236,15 +257,24 @@ class BlueskyController extends Controller {
                 ->paginate(20)->appends(request()->query());
 
             // プロフィールビューにデータを渡して表示します。
+            $notifications = collect();
+            if (Auth::check()) {
+                $notifications = Auth::user()->unreadNotifications;
+            }
+
             return view('profile', array_merge([
                 'posts'           => $posts,
                 'last_fetched_at' => $user->last_fetched_at, // 最終更新日をビューに渡す
+                'notifications'   => $notifications, // 未読通知をビューに渡す
             ], $this->prepareCommonProfileData($user)));
         } catch (\Exception $e) {
-            // エラーが発生した場合は、デバッグ情報を出力し、エラーメッセージと共に前のページに戻ります。
-            dd($e->getFile(), $e->getLine(), $e->getMessage(), $e->getTrace());
-
-            return back()->with('error', 'Error: ' . $e->getMessage());
+            Log::error(sprintf(
+                'プロフィール表示中にエラー: %s %d. %s',
+                $e->getFile(),
+                $e->getLine(),
+                $e->getMessage()
+            ));
+            return back()->with('error', 'プロフィール表示中にエラーが発生しました。詳細についてはログを確認してください。');
         }
     }
 
@@ -292,9 +322,13 @@ class BlueskyController extends Controller {
                 'order'   => $order,
             ], $this->prepareCommonProfileData($user)));
         } catch (\Exception $e) {
-            dd($e->getFile(), $e->getLine(), $e->getMessage(), $e->getTrace());
-
-            return back()->with('error', 'Error: ' . $e->getMessage());
+            Log::error(sprintf(
+                'リプライ表示中にエラー: %s %d. %s',
+                $e->getFile(),
+                $e->getLine(),
+                $e->getMessage()
+            ));
+            return back()->with('error', 'リプライ表示中にエラーが発生しました。詳細についてはログを確認してください。');
         }
     }
 

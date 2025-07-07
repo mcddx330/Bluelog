@@ -6,6 +6,7 @@ use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Revolution\Bluesky\Facades\Bluesky;
 use App\Traits\PreparesProfileData;
 
@@ -63,8 +64,13 @@ class BlueskyLikesController extends BlueskyController
                 'likes_pagination' => $likes, // ページネーション情報をビューに渡します。
             ], $this->prepareCommonProfileData($user)));
         } catch (Exception $e) {
-            // エラーが発生した場合は、エラーメッセージと共に前のページに戻ります。
-            return back()->with('error', 'Error: ' . $e->getMessage());
+            Log::error(sprintf(
+                'いいね表示中にエラー: %s %d. %s',
+                $e->getFile(),
+                $e->getLine(),
+                $e->getMessage()
+            ));
+            return back()->with('error', 'いいね表示中にエラーが発生しました。詳細についてはログを確認してください。');
         }
     }
 }

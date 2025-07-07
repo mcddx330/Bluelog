@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Notifications\Notifiable; // 追加
 
 /**
  *
@@ -56,7 +57,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @mixin \Eloquent
  */
 class User extends Authenticatable {
-    use HasFactory;
+    use HasFactory, Notifiable;
 
     /**
      * このモデルに関連付けられているテーブル名。
@@ -152,4 +153,6 @@ class User extends Authenticatable {
     public function getTotalDaysFromRegisteredBlueskyAttribute(): int {
         return (int)$this->registered_at->diffInDays(now());
     }
+
+    
 }

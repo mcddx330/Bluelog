@@ -14,6 +14,7 @@ Route::get('/', function () {
 Route::get('/login', [BlueskyController::class, 'login'])->name('login');
 Route::post('/login', [BlueskyController::class, 'doLogin'])->name('login.post');
 Route::post('/logout', [BlueskyController::class, 'doLogout'])->name('logout');
+Route::post('/notifications/mark-as-read', [BlueskyController::class, 'markNotificationsAsRead'])->name('notifications.markAsRead');
 Route::middleware('auth')->group(function () {
     Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');

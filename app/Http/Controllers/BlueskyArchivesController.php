@@ -6,6 +6,7 @@ use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Traits\PreparesProfileData;
 
 class BlueskyArchivesController extends BlueskyController
@@ -42,8 +43,13 @@ class BlueskyArchivesController extends BlueskyController
                 'handle' => $handle,
             ], $this->prepareCommonProfileData($user)));
         } catch (Exception $e) {
-            // エラーが発生した場合は、エラーメッセージと共に前のページに戻ります。
-            return back()->with('error', 'Error: ' . $e->getMessage());
+            Log::error(sprintf(
+                'アーカイブ表示中にエラー: %s %d. %s',
+                $e->getFile(),
+                $e->getLine(),
+                $e->getMessage()
+            ));
+            return back()->with('error', 'アーカイブ表示中にエラーが発生しました。詳細についてはログを確認してください。');
         }
     }
 }
