@@ -15,7 +15,7 @@ class HashtagController extends Controller {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request, string $handle): View {
+    public function index(Request $request, string $handle): \Illuminate\Http\RedirectResponse {
         $user = User::where('handle', $handle)->first();
 
         // ユーザーが存在しない場合

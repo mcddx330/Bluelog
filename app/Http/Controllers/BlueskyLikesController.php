@@ -27,6 +27,9 @@ class BlueskyLikesController extends BlueskyController {
         }
 
         try {
+            // ハンドル名に基づいてユーザーをデータベースから検索します。見つからない場合は例外をスローします。
+            $user = User::where('handle', $handle)->first();
+
             // ユーザーが存在しない場合
             if (!($user instanceof User)) {
                 return redirect()->route('profile.show', ['handle' => $handle]);
