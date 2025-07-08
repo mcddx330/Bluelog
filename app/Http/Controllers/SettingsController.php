@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Traits\BuildViewBreadcrumbs;
 use App\Traits\PreparesProfileData;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
@@ -20,14 +22,14 @@ class SettingsController extends Controller {
     /**
      * ユーザー設定の編集フォームを表示します。
      * 認証済みのユーザー情報を取得し、設定編集ビューに渡します。
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+     * @return View|RedirectResponse
      */
     public function edit() {
         $user = Auth::user();
 
         // ユーザーが認証されていない場合
         if (!($user instanceof User)) {
-            return redirect()->route('login')->with('error', '設定ページにアクセスするにはログインが必要です。');
+            return redirect()->route('login')->with('error', 'ログインしてください。');
         }
 
         // canShowはSettingsControllerでは不要なので、直接is_privateをチェック
@@ -54,12 +56,17 @@ class SettingsController extends Controller {
      * リクエストからバリデートされた設定値（例: is_private）を取得し、
      * 認証済みユーザーのモデルを更新して保存します。
      *
-     * @param \Illuminate\Http\Request $request HTTPリクエストオブジェクト。
+     * @param Request $request HTTPリクエストオブジェクト。
      *
-     * @return \Illuminate\Http\RedirectResponse 設定更新後のリダイレクトレスポポンス。
+     * @return RedirectResponse 設定更新後のリダイレクトレスポポンス。
      */
     public function update(Request $request) {
         $user = Auth::user();
+
+        // ユーザーが認証されていない場合
+        if (!($user instanceof User)) {
+            return redirect()->route('login')->with('error', 'ログインしてください。');
+        }
 
         // リクエストデータのバリデーションを行います。
         $validated = $request->validate([
@@ -81,9 +88,9 @@ class SettingsController extends Controller {
      * ユーザーアカウントを削除します。
      * 認証済みのユーザーアカウントをデータベースから削除し、ログアウトさせます。
      *
-     * @param \Illuminate\Http\Request $request HTTPリクエストオブジェクト。
+     * @param Request $request HTTPリクエストオブジェクト。
      *
-     * @return \Illuminate\Http\RedirectResponse 削除後のリダイレクトレスポンス。
+     * @return RedirectResponse 削除後のリダイレクトレスポンス。
      */
     public function destroy(Request $request) {
         $user = Auth::user();
@@ -101,10 +108,16 @@ class SettingsController extends Controller {
 
     /**
      * 認証済みユーザーの投稿データをCSV形式でエクスポートします。
-     * @return \Symfony\Component\HttpFoundation\StreamedResponse
+     * @return RedirectResponse|StreamedResponse
      */
-    public function exportPosts(): StreamedResponse {
+    public function exportPosts() {
         $user = Auth::user();
+
+        // ユーザーが認証されていない場合
+        if (!($user instanceof User)) {
+            return redirect()->route('login')->with('error', 'ログインしてください。');
+        }
+
         $filename = sprintf(
             'bluelog_posts_%s_%s.csv',
             $user->handle,
@@ -156,7 +169,7 @@ class SettingsController extends Controller {
      *
      * @param string $handle 更新するユーザーのハンドル名。
      *
-     * @return \Illuminate\Http\RedirectResponse プロフィール表示ページへのリダイレクトレスポンス。
+     * @return RedirectResponse プロフィール表示ページへのリダイレクトレスポンス。
      */
     public function fullSyncData(string $handle) {
         $user = Auth::user();

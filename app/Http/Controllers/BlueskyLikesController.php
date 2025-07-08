@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Traits\BuildViewBreadcrumbs;
 use Exception;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use App\Traits\PreparesProfileData;
 
@@ -18,7 +19,7 @@ class BlueskyLikesController extends BlueskyController {
      *
      * @param string $handle 表示するユーザーのハンドル名。
      *
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse 「いいね」履歴ビューまたはリダイレクトレスポンス。
+     * @return View|RedirectResponse 「いいね」履歴ビューまたはリダイレクトレスポンス。
      */
     public function show(string $handle) {
         // Blueskyセッションが存在する場合、セッションを再開します。

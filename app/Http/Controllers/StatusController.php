@@ -6,8 +6,9 @@ use App\Models\DailyStat;
 use App\Models\Post;
 use App\Models\User;
 use App\Traits\BuildViewBreadcrumbs;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Traits\PreparesProfileData;
 
@@ -18,10 +19,10 @@ class StatusController extends Controller {
      * 指定されたハンドルのユーザーの統計情報を表示します。
      * データベースから日ごとの統計データを取得し、集計してビューに渡します。
      *
-     * @param string                   $handle 表示するユーザーのハンドル名。
-     * @param \Illuminate\Http\Request $request HTTPリクエストオブジェクト。
+     * @param string  $handle 表示するユーザーのハンドル名。
+     * @param Request $request HTTPリクエストオブジェクト。
      *
-     * @return \Illuminate\Contracts\View\View 統計情報ビュー。
+     * @return View|RedirectResponse
      */
     public function show(string $handle, Request $request) {
         // ハンドル名に基づいてユーザーをデータベースから検索します。見つからない場合は例外をスローします。

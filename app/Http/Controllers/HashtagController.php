@@ -6,16 +6,19 @@ use App\Models\Hashtag;
 use App\Models\User;
 use App\Traits\BuildViewBreadcrumbs;
 use App\Traits\PreparesProfileData;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 
 class HashtagController extends Controller {
     use PreparesProfileData, BuildViewBreadcrumbs;
 
     /**
      * Display a listing of the resource.
+     * @return Factory|View|Application|object
      */
-    public function index(Request $request, string $handle): \Illuminate\Http\RedirectResponse {
+    public function index(Request $request, string $handle) {
         $user = User::where('handle', $handle)->first();
 
         // ユーザーが存在しない場合

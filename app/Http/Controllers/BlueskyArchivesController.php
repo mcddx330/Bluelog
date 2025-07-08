@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Traits\BuildViewBreadcrumbs;
 use Exception;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Foundation\Application;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use App\Traits\PreparesProfileData;
 
@@ -17,7 +20,7 @@ class BlueskyArchivesController extends BlueskyController {
      *
      * @param string $handle 表示するユーザーのハンドル名。
      *
-     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Http\Response|object
+     * @return Factory|View|Application|RedirectResponse|object
      */
     public function show(string $handle) {
         // Blueskyセッションが存在する場合、セッションを再開します。

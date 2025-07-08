@@ -5,13 +5,17 @@ namespace App\Http\Controllers;
 use App\Models\Post;
 use App\Models\User;
 use App\Traits\BuildViewBreadcrumbs;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Foundation\Application;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
-use Revolution\Bluesky\BlueskyManager;
 use Revolution\Bluesky\Facades\Bluesky;
 use Revolution\Bluesky\Session\AbstractSession;
 use Revolution\Bluesky\Session\LegacySession;
@@ -82,15 +86,15 @@ class BlueskyController extends Controller {
 
     /**
      * 現在のBlueskyManagerインスタンスを取得します。
-     * @return BlueskyManager
+     * @return Bluesky
      */
-    public function getCurrentSession(): BlueskyManager {
+    public function getCurrentSession() {
         return Bluesky::withToken($this->getBlueskySession());
     }
 
     /**
      * ログインフォームを表示します。
-     * @return \Illuminate\Contracts\View\View
+     * @return View
      */
     public function login() {
         return view('login');
@@ -101,9 +105,9 @@ class BlueskyController extends Controller {
      * ユーザーからの識別子とパスワードを受け取り、Bluesky APIで認証を行います。
      * 認証成功後、ユーザー情報をデータベースに保存し、セッションにログイン状態を保持します。
      *
-     * @param \Illuminate\Http\Request $request HTTPリクエストオブジェクト。
+     * @param Request $request HTTPリクエストオブジェクト。
      *
-     * @return \Illuminate\Http\RedirectResponse ログイン後のリダイレクトレスポンス。
+     * @return RedirectResponse ログイン後のリダイレクトレスポンス。
      */
     public function doLogin(Request $request) {
         // 入力データのバリデーションを行います。
@@ -182,9 +186,9 @@ class BlueskyController extends Controller {
     /**
      * ユーザーの通知を既読にします。
      *
-     * @param \Illuminate\Http\Request $request HTTPリクエストオブジェクト。
+     * @param Request $request HTTPリクエストオブジェクト。
      *
-     * @return \Illuminate\Http\RedirectResponse リダイレクトレスポンス。
+     * @return RedirectResponse リダイレクトレスポンス。
      */
     public function markNotificationsAsRead(Request $request) {
         $user = Auth::user();
@@ -201,7 +205,7 @@ class BlueskyController extends Controller {
      *
      * @param string $handle 表示するユーザーのハンドル名。
      *
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Http\Response|\Illuminate\Routing\Redirector|object
+     * @return Application|Factory|Redirector|object|RedirectResponse|View
      */
     public function showProfile(string $handle, Request $request) {
         try {
@@ -305,10 +309,10 @@ class BlueskyController extends Controller {
     /**
      * 指定されたハンドルのユーザーのリプライランキングを表示します。
      *
-     * @param string                   $handle 表示するユーザーのハンドル名。
-     * @param \Illuminate\Http\Request $request HTTPリクエストオブジェクト。
+     * @param string  $handle 表示するユーザーのハンドル名。
+     * @param Request $request HTTPリクエストオブジェクト。
      *
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Http\Response
+     * @return Factory|View|Application|object|RedirectResponse
      */
     public function showReplies(string $handle, Request $request) {
         try {
@@ -334,7 +338,7 @@ class BlueskyController extends Controller {
             if ($sort_by === 'handle') {
                 $replies->orderBy('reply_to_handle', $order);
             } else { // default sort by count
-                $replies->orderBy('reply_count', $order);
+                $replies->orderBy('replies_count', $order);
                 $replies->orderBy('reply_to_handle', 'asc'); // Secondary sort
             }
             $replies = $replies->paginate(20)->appends(request()->query());
@@ -364,9 +368,9 @@ class BlueskyController extends Controller {
     /**
      * ユーザーをログアウトさせ、セッションをクリアします。
      *
-     * @param \Illuminate\Http\Request $request HTTPリクエストオブジェクト。
+     * @param Request $request HTTPリクエストオブジェクト。
      *
-     * @return \Illuminate\Http\RedirectResponse ログアウト後のリダイレクトレスポンス。
+     * @return RedirectResponse ログアウト後のリダイレクトレスポンス。
      */
     public function doLogout(Request $request) {
         Auth::logout(); // ユーザーをログアウトさせます。
@@ -383,7 +387,7 @@ class BlueskyController extends Controller {
      *
      * @param string $handle 更新するユーザーのハンドル名。
      *
-     * @return \Illuminate\Http\RedirectResponse プロフィール表示ページへのリダイレクトレスポンス。
+     * @return RedirectResponse プロフィール表示ページへのリダイレクトレスポンス。
      */
     public function updateProfileData(string $handle) {
         $user = User::where('handle', $handle)->firstOrFail();
@@ -401,12 +405,12 @@ class BlueskyController extends Controller {
     /**
      * 指定されたポストを削除します。
      *
-     * @param \Illuminate\Http\Request $request HTTPリクエストオブジェクト。
-     * @param string $post_id 削除するポストのID。
-     * @return \Illuminate\Http\RedirectResponse リダイレクトレスポンス。
+     * @param Request $request HTTPリクエストオブジェクト。
+     * @param string  $post_id 削除するポストのID。
+     *
+     * @return RedirectResponse リダイレクトレスポンス。
      */
-    public function deletePost(Request $request, string $post_id)
-    {
+    public function deletePost(Request $request, string $post_id) {
         $user = Auth::user();
 
         if (!$user) {
@@ -421,6 +425,7 @@ class BlueskyController extends Controller {
 
         try {
             $post->delete();
+
             return back()->with('success', 'ポストが正常に削除されました。');
         } catch (\Exception $e) {
             Log::error(sprintf(
@@ -429,6 +434,7 @@ class BlueskyController extends Controller {
                 $e->getLine(),
                 $e->getMessage()
             ));
+
             return back()->with('error', 'ポストの削除中にエラーが発生しました。');
         }
     }
