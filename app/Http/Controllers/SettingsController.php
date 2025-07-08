@@ -15,6 +15,8 @@ use App\Models\Post;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use App\Providers\AppServiceProvider;
 use League\Csv\Writer;
+use App\Models\InvitationCode;
+use Illuminate\Support\Str;
 
 class SettingsController extends Controller {
     use PreparesProfileData, BuildViewBreadcrumbs;
@@ -45,9 +47,11 @@ class SettingsController extends Controller {
             ->addBreadcrumb('設定')
             ->getBreadcrumbs();
 
+        $invitation_codes = InvitationCode::where('issued_by_user_did', $user->did)->with('usages.user')->get();
+
         return view(
             'settings.edit', array_merge(
-            compact('user', 'breadcrumbs'),
+            compact('user', 'breadcrumbs', 'invitation_codes'),
         ), $this->prepareCommonProfileData($user));
     }
 
@@ -94,6 +98,11 @@ class SettingsController extends Controller {
      */
     public function destroy(Request $request) {
         $user = Auth::user();
+
+        // ユーザーが認証されていない場合
+        if (!($user instanceof User)) {
+            return redirect()->route('login')->with('error', 'ログインしてください。');
+        }
 
         DB::transaction(function () use ($user) {
             $user->delete(); // ユーザーと関連データを削除
@@ -174,20 +183,85 @@ class SettingsController extends Controller {
     public function fullSyncData(string $handle) {
         $user = Auth::user();
 
-        if (!$user || $user->handle !== $handle) {
-            return back()->with('error', '権限がありません。');
+        // ユーザーが認証されていない場合
+        if (!($user instanceof User) || $user->handle !== $handle) {
+            return redirect()->route('login')->with('error', 'ログインしてください。');
         }
 
         // status:aggregate コマンドを非同期で実行
         dispatch(function () use ($user) {
             Artisan::call('status:aggregate', [
-                '--did'     => $user->did,
+                '--did'       => $user->did,
                 '--full-sync' => true,
-                '--force'   => true,
+                '--force'     => true,
             ]);
         })->onQueue('default');
 
         return redirect()->route('settings.edit')->with('status', '全件再取得を開始しました。データ量によっては時間がかかります。');
+    }
+
+    /**
+     * 新しい招待コードを生成します。
+     *
+     * @param Request $request HTTPリクエストオブジェクト。
+     *
+     * @return RedirectResponse 招待コード生成後のリダイレクトレスポンス。
+     */
+    public function generateInvitationCode(Request $request) {
+        $user = Auth::user();
+
+        // 既存のアクティブな招待コードを非アクティブ化
+        InvitationCode::where('issued_by_user_did', $user->did)
+            ->where('status', 'active')
+            ->update(['status' => 'inactive']);
+
+        $invitation_code = InvitationCode::create([
+            'code'               => Str::random(10), // 10文字のランダムなコード
+            'issued_by_user_did' => $user->did,
+            'usage_limit'        => null, // 利用回数制限なし
+            'expires_at'         => now()->addMonth(), // 1ヶ月後に有効期限切れ
+            'status'             => 'active',
+        ]);
+
+        return back()->with('success', '招待コードが生成されました: ' . $invitation_code->code);
+    }
+
+    /**
+     * 指定された招待コードを削除します。
+     *
+     * @param Request $request HTTPリクエストオブジェクト。
+     * @param string $invitation_code_id 削除する招待コードのID。
+     * @return RedirectResponse 招待コード削除後のリダイレクトレスポンス。
+     */
+    public function deleteInvitationCode(Request $request, string $invitation_code_id)
+    {
+        $user = Auth::user();
+
+        // ユーザーが認証されていない場合
+        if (!($user instanceof User)) {
+            return redirect()->route('login')->with('error', 'ログインしてください。');
+        }
+
+        $invitation_code = InvitationCode::where('id', $invitation_code_id)
+            ->where('issued_by_user_did', $user->did)
+            ->first();
+
+        if (!$invitation_code) {
+            return back()->with('error', '指定された招待コードが見つからないか、削除する権限がありません。');
+        }
+
+        try {
+            $invitation_code->delete();
+            return back()->with('success', '招待コードが正常に削除されました。');
+        } catch (\Exception $e) {
+            \Log::error(sprintf(
+                '招待コード削除中にエラー: %s %d. %s',
+                $e->getFile(),
+                $e->getLine(),
+                $e->getMessage()
+            ));
+            return back()->with('error', '招待コードの削除中にエラーが発生しました。');
+        }
     }
 }
 

@@ -2,6 +2,7 @@
     'user',
     'profile',
     'handle',
+    'invitation_codes',
 ])
 
 <div class="lg:w-2/3">
@@ -10,6 +11,12 @@
     @if (session('status'))
         <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
             <span class="block sm:inline">{{ session('status') }}</span>
+        </div>
+    @endif
+
+    @if (session('success'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">{{ session('success') }}</span>
         </div>
     @endif
 
@@ -67,10 +74,69 @@
     </div>
 
     <div class="bg-white shadow-md rounded-lg p-6 mt-6">
+        <h2 class="text-xl font-semibold mb-4">新しい招待コードを生成</h2>
+        <form action="{{ route('settings.generateInvitationCode') }}" method="POST" class="space-y-4">
+            @csrf
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                コードを生成
+            </button>
+        </form>
+        <div class="mt-8">
+            <h5 class="font-semibold mb-4">あなたの招待コード</h5>
+            @if($invitation_codes->isEmpty())
+                <p>まだ招待コードを生成していません。</p>
+            @else
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                コード
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                生成日
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                有効期限
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                使用回数
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                アクション
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach($invitation_codes as $code)
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $code->code }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $code->created_at->format('Y-m-d H:i') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $code->expires_at ? $code->expires_at->format('Y-m-d H:i') : 'なし' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $code->current_usage_count }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-sm font-medium">
+                                    <form action="{{ route('settings.deleteInvitationCode', ['invitation_code_id' => $code->id]) }}" method="POST" onsubmit="return confirm('本当にこの招待コードを削除してもよろしいですか？');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-red-600 hover:text-red-900">
+                                            削除
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg p-6 mt-6">
         <h2 class="text-xl font-bold mb-4 text-red-600">全件再取得</h2>
         <p class="text-sm text-gray-700 mb-4">
-            Blueskyの全データを削除・再取得し、Bluelogを最新にリフレッシュします。<br />
-            Bluelog上で削除したポストも、Blueskyに存在していた場合、復活します。<br />
+            Blueskyの全データを削除・再取得し、Bluelogを最新にリフレッシュします。<br/>
+            Bluelog上で削除したポストも、Blueskyに存在していた場合、復活します。<br/>
             <strong class="font-bold text-red-700">この操作は元に戻せません。</strong>
         </p>
         <form action="{{ route('settings.fullSyncData', ['handle' => $profile['handle']]) }}" method="POST"

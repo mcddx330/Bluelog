@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\InvitationCode;
+use App\Models\InvitationCodeUsage;
 use App\Models\Post;
 use App\Models\User;
 use App\Traits\BuildViewBreadcrumbs;
@@ -114,6 +116,7 @@ class BlueskyController extends Controller {
         $data = $request->validate([
             'identifier' => 'required|string',
             'password'   => 'required|string',
+            'invitation_code' => 'nullable|string|exists:invitation_codes,code',
         ]);
 
         try {
@@ -133,7 +136,7 @@ class BlueskyController extends Controller {
             $profile_response = Bluesky::getProfile($handle);
             $profile_data = json_decode($profile_response->getBody(), true);
 
-            $user = DB::transaction(function () use ($did, $handle, $profile_data, $access_jwt, $refresh_jwt) {
+            $user = DB::transaction(function () use ($did, $handle, $profile_data, $access_jwt, $refresh_jwt, $data) {
                 // ユーザー情報をデータベースに保存または更新します。
                 // DIDをキーとして、既存のユーザーがいれば更新、いなければ新規作成します。
                 $user = User::updateOrCreate(
@@ -153,6 +156,22 @@ class BlueskyController extends Controller {
                         'last_login_at'   => now(),
                     ]
                 );
+
+                // 新規ユーザーの場合、招待コードを処理
+                if ($user->wasRecentlyCreated && isset($data['invitation_code'])) {
+                    $invitation_code = InvitationCode::where('code', $data['invitation_code'])->first();
+                    if ($invitation_code && $invitation_code->isValid()) {
+                        $user->is_early_adopter = true;
+                        $user->save();
+
+                        $invitation_code->markAsUsed();
+
+                        InvitationCodeUsage::create([
+                            'invitation_code_id' => $invitation_code->id,
+                            'used_by_user_did'    => $user->did,
+                        ]);
+                    }
+                }
 
                 // 認証されたユーザーとしてセッションにログイン情報を保存します。
                 Auth::login($user);

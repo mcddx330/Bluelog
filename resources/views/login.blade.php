@@ -18,6 +18,11 @@
                 <input type="password" name="password" id="password" required
                        class="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
             </div>
+            <div>
+                <label for="invitation_code" class="block text-sm font-medium text-gray-700">招待コード (任意)</label>
+                <input type="text" name="invitation_code" id="invitation_code"
+                       class="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
             <button type="submit"
                     class="w-full px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                 ログイン

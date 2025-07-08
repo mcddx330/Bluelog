@@ -46,7 +46,7 @@
 |---|---|---|
 | `id` | `uuid` (PK) | 招待コードレコードのUUID。 |
 | `code` | `string` | 招待コード文字列。ユニーク。 |
-| `issued_by_user_id` | `uuid` (FK) | この招待コードを発行したユーザーのDID (`users` テーブルの外部キー)。管理者が発行した場合は `NULL`。 |
+| `issued_by_user_did` | `uuid` (FK) | この招待コードを発行したユーザーのDID (`users` テーブルの外部キー)。管理者が発行した場合は `NULL`。 |
 | `usage_limit` | `integer` | この招待コードが使用できる最大回数。`NULL` の場合は無制限。 |
 | `current_usage_count` | `integer` | この招待コードが現在までに使用された回数 (デフォルト: `0`)。 |
 | `expires_at` | `datetime` | この招待コードの有効期限。`NULL` の場合は無期限。 |
@@ -57,13 +57,13 @@
 ### `invitation_code_usages` テーブル定義 (新規)
 招待コードの使用履歴を記録するためのテーブル。
 
-| カラム名 | 型 | 説明 |
-|---|---|---|
-| `id` | `uuid` (PK) | 使用履歴レコードのUUID。 |
+| カラム名                 | 型 | 説明 |
+|----------------------|---|---|
+| `id`                 | `uuid` (PK) | 使用履歴レコードのUUID。 |
 | `invitation_code_id` | `uuid` (FK) | 使用された招待コードのID (`invitation_codes` テーブルの外部キー)。 |
-| `used_by_user_id` | `uuid` (FK) | この招待コードを使用したユーザーのDID (`users` テーブルの外部キー)。 |
-| `created_at` | `timestamp` | レコード作成日時 (招待コードが使用された日時)。 |
-| `updated_at` | `timestamp` | レコード更新日時。 |
+| `used_by_user_did`   | `uuid` (FK) | この招待コードを使用したユーザーのDID (`users` テーブルの外部キー)。 |
+| `created_at`         | `timestamp` | レコード作成日時 (招待コードが使用された日時)。 |
+| `updated_at`         | `timestamp` | レコード更新日時。 |
 
 ### `posts` テーブル定義
 

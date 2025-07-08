@@ -63,6 +63,12 @@ use Illuminate\Support\Facades\Auth;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRefreshJwt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRegisteredAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
+ * @property bool $is_early_adopter
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\InvitationCode> $issuedInvitationCodes
+ * @property-read int|null $issued_invitation_codes_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\InvitationCodeUsage> $usedInvitationCodes
+ * @property-read int|null $used_invitation_codes_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereIsEarlyAdopter($value)
  * @mixin \Eloquent
  */
 class User extends Authenticatable {
@@ -118,6 +124,7 @@ class User extends Authenticatable {
         'is_fetching', // データ取得中かどうかを示すフラグ
         'last_synced_post_cid',
         'last_synced_like_cid',
+        'is_early_adopter',
     ];
 
     /**
@@ -135,6 +142,7 @@ class User extends Authenticatable {
         'is_fetching'          => 'boolean',
         'last_synced_post_cid' => 'string',
         'last_synced_like_cid' => 'string',
+        'is_early_adopter'     => 'boolean',
     ];
 
     public function isFetchingData(): bool {
@@ -176,6 +184,16 @@ class User extends Authenticatable {
 
         // 非公開設定の場合、ログインしているユーザーが本人であれば表示可能
         return Auth::check() && (Auth::user()->did === $this->did);
+    }
+
+    public function issuedInvitationCodes(): HasMany
+    {
+        return $this->hasMany(InvitationCode::class, 'issued_by_user_did');
+    }
+
+    public function usedInvitationCodes(): HasMany
+    {
+        return $this->hasMany(InvitationCodeUsage::class, 'used_by_user_id');
     }
 
 }
