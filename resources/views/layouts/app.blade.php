@@ -41,5 +41,8 @@
         @yield('content')
     </div>
     @stack('scripts')
+    <footer class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-gray-600 dark:text-gray-400">
+        &copy; {{ date('Y') }} Bluelog. All rights reserved.
+    </footer>
 </body>
 </html>

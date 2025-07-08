@@ -6,10 +6,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BlueskyController;
 use App\Http\Controllers\BlueskyLikesController;
 
-Route::get('/', function () {
-    return redirect('/login');
-})
-->name('index');
+use App\Http\Controllers\IndexController;
+
+Route::get('/', [IndexController::class, 'index'])->name('index');
 
 Route::get('/login', [BlueskyController::class, 'login'])->name('login');
 Route::post('/login', [BlueskyController::class, 'doLogin'])->name('login.post');
