@@ -11,6 +11,10 @@
 - **コマンド名:** `status:aggregate`
 - **ファイルパス:** `app/Console/Commands/AggregateStatusCommand.php`
 - **責務:** Bluelogに登録されている全ユーザーを対象に、Bluesky APIから未取得の活動履歴を取得し、日別の統計情報としてデータベースに保存する。
+- **オプション:**
+    *   `--did=`: 集計対象ユーザーのDIDを指定します。指定しない場合、全てのユーザーが対象となります。
+    *   `--full-sync`: 既存のカーソルを無視し、Blueskyからユーザーの全データを強制的に再取得します。このオプションを使用すると、Bluelogに保存されている当該ユーザーの既存の投稿、いいね、メディア、ハッシュタグ、日別統計データは一度削除され、Bluesky上のデータに基づいて再構築されます。Bluelog側で削除されたデータも、Bluesky上に存在すれば復活します。
+    *   `--force`: `--full-sync` オプションと併用することで、実行時の確認プロンプトをスキップします。バッチ処理など、非対話的な環境での実行時に使用します。
 
 ## 3. 処理フロー詳細
 
@@ -23,6 +27,15 @@ Bluelogのデータベースに登録されている全てのユーザーを `us
 ### ステップ2: ユーザーごとのループ処理
 
 取得した全ユーザーに対して、一人ずつ以下の同期処理を実行する。
+
+### 3.x. 強制的な全件再取得オプション (--full-sync) の挙動
+`--full-sync` オプションが指定された場合、通常の差分同期とは異なり、以下の特別な処理が実行されます。
+
+*   **既存データの削除**: 処理開始前に、当該ユーザーに関連する `posts`、`likes`、`daily_stats` テーブルのデータが全て削除されます。`posts` の削除に伴い、外部キー制約 (`onDelete('cascade')`) により、関連する `media` および `hashtags` データも自動的にカスケード削除されます。
+*   **カーソル無視と全件取得**: `users` テーブルに保存されている `last_synced_post_cid` および `last_synced_like_cid` は無視され、Bluesky APIから利用可能な最も古いデータから順に全件取得が試みられます。
+*   **データ復活**: Bluelog側でユーザーが手動で削除した投稿やいいねも、Bluesky上にまだ存在していれば、この全件再取得によってBluelogに再度記録されます。
+*   **カーソル更新**: 全件再取得が完了した後、`last_synced_post_cid` および `last_synced_like_cid` は、今回取得した最新の投稿およびいいねのCIDで更新されます。これにより、次回以降の同期は新しいカーソルから差分取得として機能します。
+*   **CLIでの警告**: CLIから `--full-sync` オプションを実行する際、`--force` オプションが指定されていない場合は、データ削除と再構築の重大性を警告するメッセージが表示され、ユーザーに続行の確認を求めます。
 
 ### ステップ3: Bluesky APIクライアントの準備
 
@@ -43,6 +56,7 @@ Bluelogのデータベースに登録されている全てのユーザーを `us
         *   `status:aggregate` コマンドの投稿取得処理は `do-while` ループで実装されており、最低1回はAPI呼び出しが実行される。これは、新しい投稿がないかを確認するため、およびカーソルベースのページネーションの特性上、避けられない挙動である。
         *   データベースへの保存には `Post::updateOrCreate()` が使用されているため、重複してデータが追加されることはなく、既存のデータは更新される。
     *   **`last_synced_post_cid` の更新:** 投稿の取得と保存が完了した後、今回取得した投稿の中で最も新しい `cid` を `users` テーブルの `last_synced_post_cid` に保存する。
+    *   **補足:** `--full-sync` オプションが指定された場合は、この差分取得ロジックは適用されず、全件取得が実行されます。
 2.  **データ集計:** 取得した新しい投稿を一つずつ分析し、日付ごとの活動内容をメモリ上の一時配列に集計する。
     - `createdAt` (投稿日時) をもとに、活動日を特定する。
     - `record` の内容を解析し、投稿の種類を判別する。
@@ -85,6 +99,7 @@ Bluelogのデータベースに登録されている全てのユーザーを `us
         *   `listRecords` APIを呼び出し、取得したいを順次処理する。
         *   取得したいの `cid` が `last_synced_like_cid` と一致した場合、それ以上古いいいねは既に同期済みと判断し、APIからの取得を打ち切る。これにより、不要なAPI呼び出しとデータ処理を削減する。
     *   **`last_synced_like_cid` の更新:** いいねの取得と保存が完了した後、今回取得したいの中で最も新しい `cid` を `users` テーブルの `last_synced_like_cid` に保存する。
+    *   **補足:** `--full-sync` オプションが指定された場合は、この差分取得ロジックは適用されず、全件取得が実行されます。
 2.  **データ集計:** 取得した新しい「いいね」レコードを一つずつ分析する。
     - `createdAt` (いいね日時) をもとに、活動日を特定する。
     - 対応する日付の `likes_count` をインクリメントする。
@@ -111,27 +126,29 @@ Bluelogのデータベースに登録されている全てのユーザーを `us
 
 ### `users` テーブル定義
 
-| カラム名 | 型 | 説明 |
-|---|---|---|
-| `did` | `string` (PK) | Blueskyの分散型識別子 (Decentralized Identifier)。主キー。 |
-| `handle` | `string` | ユーザーハンドル (@example.bsky.social) |
-| `display_name` | `string` | 表示名 |
-| `description` | `text` | プロフィール説明文 |
-| `avatar_url` | `string` | アバター画像のURL |
-| `banner_url` | `string` | バナー画像のURL |
-| `followers_count` | `integer` | フォロワー数 |
-| `following_count` | `integer` | フォロー数 |
-| `registered_at` | `datetime` | Blueskyへのアカウント登録日時 (`app.bsky.actor.getProfile` の `createdAt` を格納) |
-| `last_login_at` | `datetime` | Bluelogへの最終ログイン日時 |
-| `last_fetched_at` | `datetime` | バッチ処理などで最後に投稿やいいねを取得した日時 |
-| `access_jwt` | `text` | Bluesky APIへのアクセストークン |
-| `refresh_jwt` | `text` | Bluesky APIへのリフレッシュトークン |
-| `last_synced_post_cid` | `string` | 最後に同期した投稿のCID |
-| `last_synced_like_cid` | `string` | 最後に同期した「いいね」のCID |
-| `is_private` | `boolean` | プロフィールの公開・非公開フラグ (デフォルト: `false`) |
-| `is_fetching` | `boolean` | データ取得中フラグ (デフォルト: `false`) |
-| `created_at` | `timestamp` | レコード作成日時。 |
-| `updated_at` | `timestamp` | レコード更新日時。 |
+| カラム名                   | 型             | 説明                                                                 |
+|------------------------|---------------|--------------------------------------------------------------------|
+| `did`                  | `string` (PK) | Blueskyの分散型識別子 (Decentralized Identifier)。主キー。                     |
+| `handle`               | `string`      | ユーザーハンドル (@example.bsky.social)                                    |
+| `display_name`         | `string`      | 表示名                                                                |
+| `description`          | `text`        | プロフィール説明文                                                          |
+| `avatar_url`           | `string`      | アバター画像のURL                                                         |
+| `banner_url`           | `string`      | バナー画像のURL                                                          |
+| `followers_count`      | `integer`     | フォロワー数                                                             |
+| `following_count`      | `integer`     | フォロー数                                                              |
+| `registered_at`        | `datetime`    | Blueskyへのアカウント登録日時 (`app.bsky.actor.getProfile` の `createdAt` を格納) |
+| `last_login_at`        | `datetime`    | Bluelogへの最終ログイン日時                                                  |
+| `last_fetched_at`      | `datetime`    | バッチ処理などで最後に投稿やいいねを取得した日時                                           |
+| `access_jwt`           | `text`        | Bluesky APIへのアクセストークン                                              |
+| `refresh_jwt`          | `text`        | Bluesky APIへのリフレッシュトークン                                            |
+| `last_synced_post_cid` | `string`      | 最後に同期した投稿のCID                                                      |
+| `last_synced_like_cid` | `string`      | 最後に同期した「いいね」のCID                                                   |
+| `is_private`           | `boolean`     | プロフィールの公開・非公開フラグ (デフォルト: `false`)                                  |
+| `is_fetching`          | `boolean`     | データ取得中フラグ (デフォルト: `false`)                                         |
+| `created_at`           | `timestamp`   | レコード作成日時。                                                          |
+| `updated_at`           | `timestamp`   | レコード更新日時。                                                          |
+
+`User` モデルには、`DailyStat` モデルとの `HasMany` リレーションである `dailyStats()` メソッドが追加されました。これにより、ユーザーに関連する日別統計データを効率的に取得・管理できます。
 
 ---
 

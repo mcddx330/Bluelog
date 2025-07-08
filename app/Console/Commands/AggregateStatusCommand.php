@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\AggregateStatusFailedNotification;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Revolution\Bluesky\BlueskyManager;
@@ -17,7 +18,11 @@ use Revolution\Bluesky\Session\LegacySession;
 use App\Models\Media;
 
 class AggregateStatusCommand extends Command {
-    protected $signature = 'status:aggregate {--did= : 集計対象ユーザーのDID (オプション)} {--full-sync : 既存のカーソルを無視して、強制的に全件同期を実行します} {--force : --full-sync 使用時に確認プロンプトを表示しません}';
+    protected $signature = 'status:aggregate
+        {--did= : 集計対象ユーザーのDID (オプション)}
+        {--full-sync : 既存のカーソルを無視して、強制的に全件同期を実行します}
+        {--force : --full-sync 使用時に確認プロンプトを表示しません}
+    ';
 
     protected $description = 'Blueskyユーザーのアクティビティを取得し、集計します。--full-sync オプションを使用すると、既存のデータを削除し、Blueskyから全件再取得します。';
 
@@ -36,7 +41,6 @@ class AggregateStatusCommand extends Command {
         }
         $did = $this->option('did');
 
-        /** @var \Illuminate\Database\Eloquent\Builder $users クエリビルダー */
         $users = User::where('did', $did);
         if (empty($did)) {
             $users = User::query()
@@ -44,12 +48,11 @@ class AggregateStatusCommand extends Command {
                 ->orWhereNull('is_fetching');
         }
 
-        /** @var \Illuminate\Database\Eloquent\Collection<User> $users ユーザーのコレクション */
+        /** @var Collection<User> $users ユーザーのコレクション */
         $users = $users->get();
 
         if ($users->isEmpty()) {
             $this->comment('処理対象のユーザーがありません。');
-
             return;
         }
 
