@@ -14,6 +14,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
     Route::delete('/settings', [SettingsController::class, 'destroy'])->name('settings.destroy');
     Route::post('/settings/export-posts', [SettingsController::class, 'exportPosts'])->name('settings.exportPosts');
+    Route::post('/{handle}/full-sync-data', [SettingsController::class, 'fullSyncData'])->name('settings.fullSyncData');
 });
 
 Route::get('/', [IndexController::class, 'index'])->name('index');

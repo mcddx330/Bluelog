@@ -17,13 +17,23 @@ use Revolution\Bluesky\Session\LegacySession;
 use App\Models\Media;
 
 class AggregateStatusCommand extends Command {
-    protected $signature = 'status:aggregate {--did= : The DID of the user to aggregate data for (optional)}';
+    protected $signature = 'status:aggregate {--did= : 集計対象ユーザーのDID (オプション)} {--full-sync : 既存のカーソルを無視して、強制的に全件同期を実行します} {--force : --full-sync 使用時に確認プロンプトを表示しません}';
 
-    protected $description = 'Blueskyユーザーのアクティビティを取得し、集計します。';
+    protected $description = 'Blueskyユーザーのアクティビティを取得し、集計します。--full-sync オプションを使用すると、既存のデータを削除し、Blueskyから全件再取得します。';
 
     public function handle(): void {
         $this->info('Blueskyステータス集計を開始します...');
 
+        $full_sync = $this->option('full-sync');
+        $force = $this->option('force');
+
+        if ($full_sync && !$force) {
+            $this->warn('--full-sync オプションが指定されました。これにより、既存の投稿、いいね、メディア、ハッシュタグ、日別統計データが削除され、Blueskyから全件再取得されます。');
+            if ($this->confirm('続行しますか？ (yes/no)') === false) {
+                $this->info('処理を中断しました。');
+                return;
+            }
+        }
         $did = $this->option('did');
 
         /** @var \Illuminate\Database\Eloquent\Builder $users クエリビルダー */
@@ -57,13 +67,22 @@ class AggregateStatusCommand extends Command {
                     $user->markFetching();
                 });
 
-                DB::transaction(function () use ($bluesky, $user) {
+                DB::transaction(function () use ($bluesky, $user, $full_sync) {
                     // プロフィール更新
                     $this->updateUserProfile($bluesky, $user);
 
+                    if ($full_sync) {
+                        $this->info(sprintf('[full-sync] 既存の投稿データを削除します: %s', $user->handle));
+                        $user->posts()->delete();
+                        $this->info(sprintf('[full-sync] 既存のいいねデータを削除します: %s', $user->handle));
+                        $user->likes()->delete();
+                        $this->info(sprintf('[full-sync] 既存の日別統計データを削除します: %s', $user->handle));
+                        $user->dailyStats()->delete();
+                    }
+
                     // 投稿といいねの取得・保存
-                    $post_daily_data = $this->fetchAndStorePosts($bluesky, $user);
-                    $like_daily_data = $this->fetchAndStoreLikes($bluesky, $user);
+                    $post_daily_data = $this->fetchAndStorePosts($bluesky, $user, $full_sync);
+                    $like_daily_data = $this->fetchAndStoreLikes($bluesky, $user, $full_sync);
 
                     // 日別統計を統合して保存
                     $this->upsertDailyStats($user, $post_daily_data, $like_daily_data);
@@ -148,11 +167,11 @@ class AggregateStatusCommand extends Command {
         $this->info(sprintf('[profile] %s のプロフィールを更新しました。', $user->handle));
     }
 
-    private function fetchAndStorePosts(BlueskyManager $bluesky, User $user): array {
+    private function fetchAndStorePosts(BlueskyManager $bluesky, User $user, bool $full_sync = false): array {
         $this->comment(sprintf('[posts] %s の投稿取得開始...', $user->handle));
         $daily_data = [];
         $newest_post_cid = null;
-        $last_synced_post_cid = $user->last_synced_post_cid;
+        $last_synced_post_cid = $full_sync ? null : $user->last_synced_post_cid;
         $cursor = null;
         $new_count = 0;
 
@@ -288,11 +307,11 @@ class AggregateStatusCommand extends Command {
         return $daily_data;
     }
 
-    private function fetchAndStoreLikes(BlueskyManager $bluesky, User $user): array {
+    private function fetchAndStoreLikes(BlueskyManager $bluesky, User $user, bool $full_sync = false): array {
         $this->comment(sprintf('[likes] %s のいいね取得開始...', $user->handle));
         $daily_data = [];
         $newest_like_cid = null;
-        $last_synced_like_cid = $user->last_synced_like_cid;
+        $last_synced_like_cid = $full_sync ? null : $user->last_synced_like_cid;
         $cursor = null;
         $new_count = 0;
 
@@ -392,7 +411,6 @@ class AggregateStatusCommand extends Command {
                     $daily_stat->reposts_count)
             );
         }
-        $user->posts_count = $total_post_count;
         $user->save();
 
         $this->info('[stats] 日別統計のアップサート完了');
@@ -418,7 +436,7 @@ class AggregateStatusCommand extends Command {
                         'aspect_ratio_height' => $image['aspectRatio']['height'] ?? null,
                     ];
                     $media = Media::query()
-                        ->where('post_did', '=', $post->did)
+                        ->where('post_cid', '=', $post->cid)
                         ->where('fullsize_url', '=', $values['fullsize_url'])
                         ->first();
                     if (!($media instanceof Media)) {
@@ -444,7 +462,7 @@ class AggregateStatusCommand extends Command {
                     'aspect_ratio_height' => $video['aspectRatio']['height'] ?? null,
                 ];
                 $media = Media::query()
-                    ->where('post_did', '=', $post->did)
+                    ->where('post_cid', '=', $post->cid)
                     ->where('fullsize_url', '=', $values['fullsize_url'])
                     ->first();
                 if (!($media instanceof Media)) {

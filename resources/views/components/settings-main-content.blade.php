@@ -55,7 +55,7 @@
 
     <div class="bg-white shadow-md rounded-lg p-6 mt-6">
         <h2 class="text-xl font-bold mb-4">データエクスポート</h2>
-        <p class="text-gray-700 mb-4">
+        <p class="text-sm text-gray-700 mb-4">
             あなたのBluelogに保存されている投稿データをCSV形式でエクスポートします。
         </p>
         <form action="{{ route('settings.exportPosts') }}" method="POST">
@@ -67,12 +67,28 @@
     </div>
 
     <div class="bg-white shadow-md rounded-lg p-6 mt-6">
+        <h2 class="text-xl font-bold mb-4 text-red-600">全件再取得</h2>
+        <p class="text-sm text-gray-700 mb-4">
+            Blueskyの全データを削除・再取得し、Bluelogを最新にリフレッシュします。<br />
+            Bluelog上で削除したポストも、Blueskyに存在していた場合、復活します。<br />
+            <strong class="font-bold text-red-700">この操作は元に戻せません。</strong>
+        </p>
+        <form action="{{ route('settings.fullSyncData', ['handle' => $profile['handle']]) }}" method="POST"
+              onsubmit="return confirm('本当に全件再取得を実行してもよろしいですか？\nこの操作は元に戻せません。データ量によっては時間がかかります。');">
+            @csrf
+            <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                全件再取得を実行
+            </button>
+        </form>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg p-6 mt-6">
         <h2 class="text-xl font-bold mb-4 text-red-600">アカウント削除</h2>
-        <p class="text-gray-700 mb-4">
-            この操作は元に戻せません。アカウントを削除すると、あなたのBluelog上の全てのデータ（投稿、いいね、統計など）が完全に削除されます。
+        <p class="text-sm text-gray-700 mb-4">
+            アカウントを削除すると、あなたのBluelog上の全てのデータ（投稿、いいね、統計など）が完全に削除されます。
         </p>
         <form action="{{ route('settings.destroy') }}" method="POST"
-              onsubmit="return confirm('本当にアカウントを削除してもよろしいですか？この操作は元に戻せません。');">
+              onsubmit="return confirm('本当にアカウントを削除してもよろしいですか？\nこの操作は元に戻せません。');">
             @csrf
             @method('DELETE')
             <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">

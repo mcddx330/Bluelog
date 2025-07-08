@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Traits\BuildViewBreadcrumbs;
 use App\Traits\PreparesProfileData;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Post;
@@ -130,7 +131,7 @@ class SettingsController extends Controller {
                 ->orderBy('posted_at', 'desc')
                 ->chunk(1000, function ($posts) use ($csv) {
                     foreach ($posts as $post) {
-                        $bluesky_url = 'https://bsky.app/profile/' . $post->did . '/post/' . $post->rkey;
+                        $bluesky_url = 'https://bsky.app/profile/' . $post->did . '/' . $post->rkey;
                         $text = AppServiceProvider::renderBlueskyText($post->text);
                         // HTMLタグを除去
                         $text = strip_tags($text);
@@ -148,6 +149,32 @@ class SettingsController extends Controller {
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * 認証済みユーザーのBlueskyデータを全件再取得します。
+     *
+     * @param string $handle 更新するユーザーのハンドル名。
+     *
+     * @return \Illuminate\Http\RedirectResponse プロフィール表示ページへのリダイレクトレスポンス。
+     */
+    public function fullSyncData(string $handle) {
+        $user = Auth::user();
+
+        if (!$user || $user->handle !== $handle) {
+            return back()->with('error', '権限がありません。');
+        }
+
+        // status:aggregate コマンドを非同期で実行
+        dispatch(function () use ($user) {
+            Artisan::call('status:aggregate', [
+                '--did'     => $user->did,
+                '--full-sync' => true,
+                '--force'   => true,
+            ]);
+        })->onQueue('default');
+
+        return redirect()->route('settings.edit')->with('status', '全件再取得を開始しました。データ量によっては時間がかかります。');
     }
 }
 
