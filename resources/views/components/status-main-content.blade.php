@@ -50,10 +50,12 @@
                                     ? $period_end
                                     : (is_string($period_end) ? \Carbon\Carbon::parse($period_end) : null);
                             @endphp
-                            {{ $period_start_carbon->format('Y/m/d') }}
-                            〜
-                            {{ $period_end_carbon->format('Y/m/d') }}
-                            ({{ number_format($period_days) }} 日間)
+                            @if (isset($period_start_carbon) && isset($period_end_carbon))
+                                {{ $period_start_carbon->format('Y/m/d') }}
+                                〜
+                                {{ $period_end_carbon->format('Y/m/d') }}
+                                ({{ number_format($period_days) }} 日間)
+                            @endif
                         </td>
                     </tr>
                     <tr class="border-b">

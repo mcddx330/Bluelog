@@ -397,4 +397,39 @@ class BlueskyController extends Controller {
 
         return redirect()->route('profile.show', ['handle' => $handle])->with('status', 'データ更新を開始しました。');
     }
+
+    /**
+     * 指定されたポストを削除します。
+     *
+     * @param \Illuminate\Http\Request $request HTTPリクエストオブジェクト。
+     * @param string $post_id 削除するポストのID。
+     * @return \Illuminate\Http\RedirectResponse リダイレクトレスポンス。
+     */
+    public function deletePost(Request $request, string $post_id)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return back()->with('error', '認証されていません。');
+        }
+
+        $post = Post::where('id', $post_id)->where('did', $user->did)->first();
+
+        if (!$post) {
+            return back()->with('error', '指定されたポストが見つからないか、削除する権限がありません。');
+        }
+
+        try {
+            $post->delete();
+            return back()->with('success', 'ポストが正常に削除されました。');
+        } catch (\Exception $e) {
+            Log::error(sprintf(
+                'ポスト削除中にエラー: %s %d. %s',
+                $e->getFile(),
+                $e->getLine(),
+                $e->getMessage()
+            ));
+            return back()->with('error', 'ポストの削除中にエラーが発生しました。');
+        }
+    }
 }

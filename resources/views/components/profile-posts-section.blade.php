@@ -82,7 +82,20 @@
                                             @endforeach
                                         </div>
                                     @endif
-                                    <span class="text-sm text-gray-500 mt-2">{{ $post->posted_at->format('Y-m-d H:i:s') }}</span>
+                                    <div class="flex justify-between items-center mt-2">
+                                        <span class="text-sm text-gray-500">{{ $post->posted_at->format('Y-m-d H:i:s') }}</span>
+                                        @auth
+                                            @if(Auth::user()->did === $post->did)
+                                                <form action="{{ route('posts.delete', ['post_id' => $post->id]) }}" method="POST" onsubmit="return confirm('本当にこのポストを削除してもよろしいですか？');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-red-500 hover:text-red-700 text-sm">
+                                                        <i class="fas fa-trash-alt"></i> 削除
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        @endauth
+                                    </div>
                                 </div>
                             @endforeach
                         </div>
