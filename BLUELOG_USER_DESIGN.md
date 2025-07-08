@@ -37,6 +37,33 @@
 | `is_fetching` | `boolean` | データ取得中フラグ (デフォルト: `false`) |
 | `created_at` | `timestamp` | レコード作成日時。 |
 | `updated_at` | `timestamp` | レコード更新日時。 |
+| `is_early_adopter` | `boolean` | 招待コードを使用して登録した早期採用者であるかを示すフラグ (デフォルト: `false`) |
+
+### `invitation_codes` テーブル定義 (新規)
+招待コードの管理と複数回利用を可能にするためのテーブル。
+
+| カラム名 | 型 | 説明 |
+|---|---|---|
+| `id` | `uuid` (PK) | 招待コードレコードのUUID。 |
+| `code` | `string` | 招待コード文字列。ユニーク。 |
+| `issued_by_user_id` | `uuid` (FK) | この招待コードを発行したユーザーのDID (`users` テーブルの外部キー)。管理者が発行した場合は `NULL`。 |
+| `usage_limit` | `integer` | この招待コードが使用できる最大回数。`NULL` の場合は無制限。 |
+| `current_usage_count` | `integer` | この招待コードが現在までに使用された回数 (デフォルト: `0`)。 |
+| `expires_at` | `datetime` | この招待コードの有効期限。`NULL` の場合は無期限。 |
+| `status` | `enum` | 招待コードの状態 (`active`, `inactive`)。`active` は現在有効なコード、`inactive` は再生成などにより無効化されたコード。デフォルト `active`。 |
+| `created_at` | `timestamp` | レコード作成日時。 |
+| `updated_at` | `timestamp` | レコード更新日時。 |
+
+### `invitation_code_usages` テーブル定義 (新規)
+招待コードの使用履歴を記録するためのテーブル。
+
+| カラム名 | 型 | 説明 |
+|---|---|---|
+| `id` | `uuid` (PK) | 使用履歴レコードのUUID。 |
+| `invitation_code_id` | `uuid` (FK) | 使用された招待コードのID (`invitation_codes` テーブルの外部キー)。 |
+| `used_by_user_id` | `uuid` (FK) | この招待コードを使用したユーザーのDID (`users` テーブルの外部キー)。 |
+| `created_at` | `timestamp` | レコード作成日時 (招待コードが使用された日時)。 |
+| `updated_at` | `timestamp` | レコード更新日時。 |
 
 ### `posts` テーブル定義
 
@@ -128,6 +155,32 @@
 | `updated_at` | `timestamp` | レコード更新日時。 |
 
 ## 4. 機能仕様
+
+### 4.x. 招待コードの管理と利用 (新規)
+Bluelogでは、サービス稼働初期のユーザー登録を招待コード制とします。招待コードは複数回利用可能であり、その利用状況を詳細に追跡します。
+
+**4.x.1. 招待コードの生成**
+*   管理者または特定の権限を持つユーザーは、新しい招待コードを生成できる。
+*   生成時には、コード文字列、発行者、使用回数制限、有効期限を設定できる。
+*   **1人のユーザーが同時にアクティブな招待コードを複数持つことはできない。新しいコードを生成した場合、以前のアクティブなコードは `inactive` 状態に更新される。**
+
+**4.x.2. 招待コードの利用**
+*   ユーザー登録時、招待コードの入力を必須とする。
+*   入力された招待コードは以下の条件で検証される。
+    *   コードが存在し、`status` が `active` であること。
+    *   有効期限内であること (`expires_at` が `NULL` または現在日時より未来であること)。
+    *   使用回数制限がある場合、`current_usage_count` が `usage_limit` 未満であること。
+*   検証に成功した場合、`invitation_codes` テーブルの `current_usage_count` をインクリメントし、`invitation_code_usages` テーブルに利用履歴を記録する。
+*   **招待コードを使用して登録したユーザーには、`users` テーブルの `is_early_adopter` フラグを `true` に設定する。**
+*   **新規登録時のみコードを取り扱い、既にアカウント登録済みのユーザーがコードを入力した場合は、コード処理を全て無視する。**
+
+**4.x.3. 早期採用者特典**
+*   `is_early_adopter` フラグが `true` のユーザーは、プロフィールページなどで「早期採用者」を示すバッジが表示される。バッジの文言やデザインはビュー側で制御される。
+
+**4.x.4. 招待コードの使用状況の表示**
+*   招待コードを生成したユーザーは、自身の設定画面で、発行した招待コードの現在の状態（`active`, `used`, `inactive`）、使用回数、有効期限、そしてそのコードを使用したユーザーのリスト（`invitation_code_usages` テーブルから取得）を確認できる。
+
+### 4.0. Blueskyの「Logged-out visibility」設定とBluelogのプライバシー管理について
 
 ### 4.0. Blueskyの「Logged-out visibility」設定とBluelogのプライバシー管理について
 
