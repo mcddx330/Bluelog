@@ -3,6 +3,7 @@
 @section('title', 'Bluesky Friends Ranking')
 
 @section('content')
+    @section('content')
     <x-profile-main-content :user="$user" :profile="$profile" :handle="$handle"/>
 
     <div class="mt-8">

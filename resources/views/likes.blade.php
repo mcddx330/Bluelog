@@ -17,4 +17,3 @@
             <x-profile-sidebar :user="$user" :handle="$handle" :archives="$archives" :top_replies="$top_replies" :top_hashtags="$top_hashtags"/>
         </div>
     </div>
-@endsection

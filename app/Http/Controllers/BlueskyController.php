@@ -208,19 +208,36 @@ class BlueskyController extends Controller {
             // ハンドル名に基づいてユーザーをデータベースから検索します。
             $user = User::where('handle', $handle)->first();
 
-            // ユーザーが見つからない場合は404エラーを返します。
+            // ユーザーが存在しない場合
             if (!($user instanceof User)) {
-                return response('このユーザーはBluelogに登録していません。', 404);
+                return view('profile', array_merge([
+                    'posts'           => collect(),
+                    'last_fetched_at' => null,
+                    'notifications'   => collect(),
+                    'breadcrumbs'     => $this->addBreadcrumb($handle)->getBreadcrumbs(),
+                    'user'            => null,
+                    'profile'         => null,
+                    'daily_stats'     => collect(),
+                    'archives'        => collect(),
+                    'top_replies'     => collect(),
+                    'top_hashtags'    => collect(),
+                ]));
             }
 
-            // プロフィールが非公開設定の場合のチェックを行います。
-            if ($user->is_private) {
-                // ログインしているユーザーが、表示対象のユーザー本人でない場合は403エラーを返します。
-                if (!Auth::check()
-                    || (Auth::user()->did !== $user->did)
-                ) {
-                    return response('このプロフィールは非公開です。', 403);
-                }
+            // ユーザーが存在し、表示可能かどうかを判定
+            if (!$user->canShow()) {
+                return view('profile', array_merge([
+                    'posts'           => collect(),
+                    'last_fetched_at' => null,
+                    'notifications'   => collect(),
+                    'breadcrumbs'     => $this->addBreadcrumb($handle)->getBreadcrumbs(),
+                    'user'            => $user, // ユーザーオブジェクトは渡す
+                    'profile'         => null, // プロフィールデータは渡さない
+                    'daily_stats'     => collect(),
+                    'archives'        => collect(),
+                    'top_replies'     => collect(),
+                    'top_hashtags'    => collect(),
+                ]));
             }
 
             // ユーザーの投稿をデータベースから取得し、新しいものから順に20件ずつページネーションします。
@@ -291,20 +308,20 @@ class BlueskyController extends Controller {
      * @param string                   $handle 表示するユーザーのハンドル名。
      * @param \Illuminate\Http\Request $request HTTPリクエストオブジェクト。
      *
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\Response リプライランキングビューまたはエラーレスポンス。
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Http\Response
      */
     public function showReplies(string $handle, Request $request) {
         try {
             $user = User::where('handle', $handle)->first();
 
+            // ユーザーが存在しない場合
             if (!($user instanceof User)) {
-                return response('このユーザーはBluelogに登録していません。', 404);
+                return redirect()->route('profile.show', ['handle' => $handle]);
             }
 
-            if ($user->is_private) {
-                if (!Auth::check() || (Auth::user()->did !== $user->did)) {
-                    return response('このプロフィールは非公開です。', 403);
-                }
+            // ユーザーが存在し、表示可能かどうかを判定
+            if (!$user->canShow()) {
+                return redirect()->route('profile.show', ['handle' => $handle]);
             }
 
             $sort_by = $request->input('sort_by', 'count'); // 'count' or 'handle'

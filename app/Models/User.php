@@ -5,7 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Notifications\Notifiable; // 追加
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
+
+// 追加
 
 /**
  * 
@@ -156,5 +159,13 @@ class User extends Authenticatable {
         return (int)$this->registered_at->diffInDays(now());
     }
 
-    
+    public function canShow(): bool {
+        if (!$this->is_private) {
+            return true; // 非公開設定でなければ常に表示可能
+        }
+
+        // 非公開設定の場合、ログインしているユーザーが本人であれば表示可能
+        return Auth::check() && (Auth::user()->did === $this->did);
+    }
+
 }

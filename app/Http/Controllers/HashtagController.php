@@ -16,7 +16,17 @@ class HashtagController extends Controller {
      * Display a listing of the resource.
      */
     public function index(Request $request, string $handle): View {
-        $user = User::where('handle', $handle)->firstOrFail();
+        $user = User::where('handle', $handle)->first();
+
+        // ユーザーが存在しない場合
+        if (!($user instanceof User)) {
+            return redirect()->route('profile.show', ['handle' => $handle]);
+        }
+
+        // ユーザーが存在し、表示可能かどうかを判定
+        if (!$user->canShow()) {
+            return redirect()->route('profile.show', ['handle' => $handle]);
+        }
 
         $sort_by = $request->input('sort_by', 'count'); // 'count' or 'tag'
         $order = $request->input('order', 'desc'); // 'asc' or 'desc'

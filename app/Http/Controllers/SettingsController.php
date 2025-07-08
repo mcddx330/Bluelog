@@ -19,12 +19,22 @@ class SettingsController extends Controller {
     /**
      * ユーザー設定の編集フォームを表示します。
      * 認証済みのユーザー情報を取得し、設定編集ビューに渡します。
-     * @return \Illuminate\Contracts\View\View 設定編集ビュー。
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
      */
     public function edit() {
         $user = Auth::user();
+
+        // ユーザーが認証されていない場合
         if (!($user instanceof User)) {
-            abort(404);
+            return redirect()->route('login')->with('error', '設定ページにアクセスするにはログインが必要です。');
+        }
+
+        // canShowはSettingsControllerでは不要なので、直接is_privateをチェック
+        if ($user->is_private && (!Auth::check() || Auth::user()->did !== $user->did)) {
+            // SettingsControllerは認証済みユーザー自身の設定ページなので、
+            // 他人の非公開設定ページにアクセスしようとした場合は、ログインページにリダイレクトするか、エラーメッセージを表示する
+            // ここでは、ログインページにリダイレクトする例
+            return redirect()->route('login')->with('error', 'この設定ページにはアクセスできません。');
         }
 
         $breadcrumbs = $this

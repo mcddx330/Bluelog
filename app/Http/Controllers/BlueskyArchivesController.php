@@ -27,14 +27,16 @@ class BlueskyArchivesController extends BlueskyController {
 
         try {
             // ハンドル名に基づいてユーザーをデータベースから検索します。見つからない場合は例外をスローします。
-            $user = User::where('handle', $handle)->firstOrFail();
+            $user = User::where('handle', $handle)->first();
 
-            // プロフィールが非公開設定の場合のチェックを行います。
-            if ($user->is_private) {
-                // ログインしているユーザーが、表示対象のユーザー本人でない場合は403エラーを返します。
-                if (!Auth::check() || Auth::user()->did !== $user->did) {
-                    return response('このプロフィールは非公開です。', 403);
-                }
+            // ユーザーが存在しない場合
+            if (!($user instanceof User)) {
+                return redirect()->route('profile.show', ['handle' => $handle]);
+            }
+
+            // ユーザーが存在し、表示可能かどうかを判定
+            if (!$user->canShow()) {
+                return redirect()->route('profile.show', ['handle' => $handle]);
             }
 
             // アーカイブ履歴ビューにデータを渡して表示します。
