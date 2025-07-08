@@ -12,10 +12,11 @@
                     Bluelogは、あなたのBlueskyでの活動を記録し、いつでも振り返ることができるサービスです。<br>
                     大切なポストや「いいね」を自動で保存し、時系列で管理できます。
                 </p>
-                {{--                <div class="mt-6">--}}
-                {{--                    <a href="{{ route('register') }}"--}}
-                {{--                       class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full text-lg transition duration-300">今すぐ始める</a>--}}
-                {{--                </div>--}}
+                <div class="mt-6 flex justify-center space-x-4">
+                    <a href="{{ route('login') }}"
+                       class="inline-block bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-full text-lg transition duration-300">
+                        新規登録・ログイン</a>
+                </div>
             </section>
 
             <!-- 何ができるかセクション -->
@@ -28,6 +29,10 @@
                     <li>特定のキーワードやハッシュタグで過去の投稿を検索できます。</li>
                     <li>プライベート設定で、保存したデータを自分だけが閲覧できるように設定できます。</li>
                 </ul>
+                <div class="mt-6 flex justify-center space-x-4">
+                    <a href="{{ route('faq') }}"
+                       class="inline-block bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-full text-lg transition duration-300">よくある質問 (FAQ)</a>
+                </div>
             </section>
 
             <!-- お知らせセクション -->

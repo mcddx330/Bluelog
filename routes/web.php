@@ -5,8 +5,16 @@ use App\Http\Controllers\StatusController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BlueskyController;
 use App\Http\Controllers\BlueskyLikesController;
-
 use App\Http\Controllers\IndexController;
+use App\Http\Controllers\FaqController;
+
+
+Route::middleware('auth')->group(function () {
+    Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
+    Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::delete('/settings', [SettingsController::class, 'destroy'])->name('settings.destroy');
+    Route::post('/settings/export-posts', [SettingsController::class, 'exportPosts'])->name('settings.exportPosts');
+});
 
 Route::get('/', [IndexController::class, 'index'])->name('index');
 
@@ -14,12 +22,8 @@ Route::get('/login', [BlueskyController::class, 'login'])->name('login');
 Route::post('/login', [BlueskyController::class, 'doLogin'])->name('login.post');
 Route::post('/logout', [BlueskyController::class, 'doLogout'])->name('logout');
 Route::post('/notifications/mark-as-read', [BlueskyController::class, 'markNotificationsAsRead'])->name('notifications.markAsRead');
-Route::middleware('auth')->group(function () {
-    Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
-    Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
-    Route::delete('/settings', [SettingsController::class, 'destroy'])->name('settings.destroy');
-    Route::post('/settings/export-posts', [SettingsController::class, 'exportPosts'])->name('settings.exportPosts');
-});
+
+Route::get('/faq', [FaqController::class, 'index'])->name('faq');
 
 Route::get('/{handle}', [BlueskyController::class, 'showProfile'])->name('profile.show');
 Route::get('/{handle}/likes', [BlueskyLikesController::class, 'show'])->name('profile.likes');

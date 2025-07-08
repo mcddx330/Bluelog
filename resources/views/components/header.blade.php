@@ -3,6 +3,7 @@
         <a href="/" class="text-2xl font-bold">Bluelog</a>
         <nav>
             <ul class="flex space-x-4">
+                <li><a href="{{ route('faq') }}" class="hover:underline">FAQ</a></li>
                 @auth
                     <li><a href="{{ route('profile.show', ['handle' => Auth::user()->handle]) }}" class="hover:underline">マイプロフィール</a></li>
                     <li><a href="{{ route('settings.edit') }}" class="hover:underline">設定</a></li>
