@@ -26,14 +26,13 @@
 | `banner_url` | `string` | バナー画像のURL |
 | `followers_count` | `integer` | フォロワー数 |
 | `following_count` | `integer` | フォロー数 |
-| `posts_count` | `unsignedBigInteger` | 総ポスト数 |
 | `registered_at` | `datetime` | Blueskyへのアカウント登録日時 (`app.bsky.actor.getProfile` の `createdAt` を格納) |
 | `last_login_at` | `datetime` | Bluelogへの最終ログイン日時 |
 | `last_fetched_at` | `datetime` | バッチ処理などで最後に投稿やいいねを取得した日時 |
 | `access_jwt` | `text` | Bluesky APIへのアクセストークン |
 | `refresh_jwt` | `text` | Bluesky APIへのリフレッシュトークン |
-| `post_fetch_cursor` | `string` | 投稿の差分取得に使用するカーソル |
-| `like_fetch_cursor` | `string` | いいねの差分取得に使用するカーソル |
+| `last_synced_post_cid` | `string` | 最後に同期した投稿のCID |
+| `last_synced_like_cid` | `string` | 最後に同期した「いいね」のCID |
 | `is_private` | `boolean` | プロフィールの公開・非公開フラグ (デフォルト: `false`) |
 | `is_fetching` | `boolean` | データ取得中フラグ (デフォルト: `false`) |
 | `created_at` | `timestamp` | レコード作成日時。 |
@@ -342,7 +341,7 @@ Bluelogにおけるユーザー関連の各ページ（例: プロフィール�
 *   **既存フィルタリングとの連携:** 投稿検索やアーカイブフィルタリングが適用されている場合でも、並び替えオプションの変更によってそれらのフィルタリングが解除されないよう、URL生成時に既存のクエリパラメータをすべて引き継ぐように設計します。
 
 *   **パフォーマンスとインデックス:**
-    *   `posts` テーブルの `posted_at` カラムにインデックスが設定されていない場合、全ての並び替え操作がフルテーブルスキャンを引き起こし、データ量が増えるにつれてパフォーマンスが低下する可能性があります。
+    *   `posts` テーブルの `posted_at` カラムにインデックスが設定されていない場合、全ての並び替え操作がフルテーブルスキャンを引き起こし、データ量が増加するとパフォーマンスが低下する可能性があります。
     *   **解決策:** `posted_at` カラムにデータベースインデックスを追加することで、「全て降順」および「全て昇順」の並び替えにおけるクエリパフォーマンスは大幅に向上します。インデックスにより、データベースは効率的にデータを検索・ソートできるようになります。
     *   **「1日単位で朝から夜（昇順）」の最適化:**
         *   `posted_at` カラムに対して `DATE()` 関数を適用してソートする場合（例: `orderByRaw('DATE(posted_at) ASC')`）、`posted_at` にインデックスがあってもそのインデックスは直接利用されません。これは、インデックスがカラムの生の値に基づいて構築されるため、関数によって計算された新しい値には適用されないためです。
@@ -416,3 +415,12 @@ Bluelogの投稿削除機能は、認証済みユーザーが自身のBluesky DI
 *   `routes/web.php` に投稿削除用のルート (`DELETE /posts/{post_id}`) を追加済みです。
 *   `resources/views/components/profile-posts-section.blade.php` に投稿削除ボタンと、誤操作を防ぐための確認ダイアログを追加済みです。
 
+### 4.11. プロフィール表示におけるリアルタイムカウント
+
+ユーザープロフィール画面のヘッダーに表示される投稿数および「いいね」数は、`users`テーブルに保存されている集計値ではなく、関連する`posts`テーブルおよび`likes`テーブルからリアルタイムにカウントされた値を使用します。これにより、常に最新かつ正確な情報がユーザーに提供されます。
+
+#### 4.11.1. 実装詳細
+
+*   **データソース**: `App\Models\User`モデルのリレーション（`posts()`および`likes()`）を通じて、関連する`posts`テーブルおよび`likes`テーブルのレコード数を直接カウントします。
+*   **データ準備**: `App\Traits\PreparesProfileData`トレイト内の`prepareCommonProfileData`メソッドにおいて、`$profile_data`配列の`posts_count`および`likes_count`属性に、このリアルタイムカウント値を設定します。
+*   **ビュー層**: ビュー（`resources/views/components/profile-main-content.blade.php`）は、`$profile`オブジェクトからこれらの属性を参照することで、リアルタイムカウントを表示します。

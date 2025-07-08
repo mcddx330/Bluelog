@@ -33,11 +33,16 @@ Bluelogのデータベースに登録されている全てのユーザーを `us
 
 ### ステップ4: 投稿フィードの取得と集計
 
-1.  **差分取得:** `users` テーブルに保存されている `post_fetch_cursor` を利用し、`getAuthorFeed` APIを呼び出す。これにより、前回取得した時点からの新しい投稿のみを効率的に取得する。
-    - **カーソルとAPIの挙動に関する補足:**
-        - `getAuthorFeed` APIは、`cursor` パラメータが指定されない場合や `null` の場合、最新の投稿から順にデータを返す。
-        - `status:aggregate` コマンドの投稿取得処理は `do-while` ループで実装されており、最低1回はAPI呼び出しが実行される。これは、新しい投稿がないかを確認するため、およびカーソルベースのページネーションの特性上、避けられない挙動である。
-        - 既に全ての投稿が取得済みであっても、この最初のAPI呼び出しは発生し、APIが既存の投稿を返す場合がある。しかし、データベースへの保存には `Post::updateOrCreate()` が使用されているため、重複してデータが追加されることはなく、既存のデータは更新される。
+1.  **差分取得:**
+    *   **初回取得時:** `users` テーブルの `last_synced_post_cid` が `null` の場合、`getAuthorFeed` APIを呼び出し、最新の投稿から順に取得を開始する。
+    *   **2回目以降の取得時:** `users` テーブルの `last_synced_post_cid` に保存されているCID（前回同期時に取得した最新投稿のCID）を基準として、それ以降の新しい投稿のみを取得する。
+        *   `getAuthorFeed` APIを呼び出し、取得した投稿を順次処理する。
+        *   取得した投稿の `cid` が `last_synced_post_cid` と一致した場合、それ以上古い投稿は既に同期済みと判断し、APIからの取得を打ち切る。これにより、不要なAPI呼び出しとデータ処理を削減する。
+    *   **カーソルとAPIの挙動に関する補足:**
+        *   `getAuthorFeed` APIは、`cursor` パラメータが指定されない場合や `null` の場合、最新の投稿から順にデータを返す。
+        *   `status:aggregate` コマンドの投稿取得処理は `do-while` ループで実装されており、最低1回はAPI呼び出しが実行される。これは、新しい投稿がないかを確認するため、およびカーソルベースのページネーションの特性上、避けられない挙動である。
+        *   データベースへの保存には `Post::updateOrCreate()` が使用されているため、重複してデータが追加されることはなく、既存のデータは更新される。
+    *   **`last_synced_post_cid` の更新:** 投稿の取得と保存が完了した後、今回取得した投稿の中で最も新しい `cid` を `users` テーブルの `last_synced_post_cid` に保存する。
 2.  **データ集計:** 取得した新しい投稿を一つずつ分析し、日付ごとの活動内容をメモリ上の一時配列に集計する。
     - `createdAt` (投稿日時) をもとに、活動日を特定する。
     - `record` の内容を解析し、投稿の種類を判別する。
@@ -45,6 +50,10 @@ Bluelogのデータベースに登録されている全てのユーザーを `us
         - リプライ (`reply` オブジェクトが存在) → `replies_count` をインクリメント
         - リポスト (`repost` オブジェクトが存在) → `reposts_count` をインクリメント
         - リプライ (`facets` 内に `reply` が存在) → `replies_count` をインクリメント
+
+#### ハッシュタグのデータ永続化における整合性保証
+
+ハッシュタグの保存処理において、データベースのUNIQUE制約違反を回避するため、`Hashtag::create()` の代わりに `Hashtag::updateOrCreate()` を使用します。これにより、ハッシュタグが既に存在する場合は更新され、存在しない場合は新規作成されるため、冪等な操作が保証され、データ整合性が維持されます.
 
 ### ステップ5: 投稿に紐づくメディア情報の取得と保存
 
@@ -70,7 +79,12 @@ Bluelogのデータベースに登録されている全てのユーザーを `us
 
 ### ステップ6: いいね履歴の取得と集計
 
-1.  **差分取得:** `users` テーブルの `like_fetch_cursor` を利用し、`listRecords` API (`collection` は `app.bsky.feed.like`) を呼び出す。
+1.  **差分取得:**
+    *   **初回取得時:** `users` テーブルの `last_synced_like_cid` が `null` の場合、`listRecords` API (`collection` は `app.bsky.feed.like`) を呼び出し、最新のいいねから順に取得を開始する。
+    *   **2回目以降の取得時:** `users` テーブルの `last_synced_like_cid` に保存されているCID（前回同期時に取得した最新いいねのCID）を基準として、それ以降の新しいいいねのみを取得する。
+        *   `listRecords` APIを呼び出し、取得したいを順次処理する。
+        *   取得したいの `cid` が `last_synced_like_cid` と一致した場合、それ以上古いいいねは既に同期済みと判断し、APIからの取得を打ち切る。これにより、不要なAPI呼び出しとデータ処理を削減する。
+    *   **`last_synced_like_cid` の更新:** いいねの取得と保存が完了した後、今回取得したいの中で最も新しい `cid` を `users` テーブルの `last_synced_like_cid` に保存する。
 2.  **データ集計:** 取得した新しい「いいね」レコードを一つずつ分析する。
     - `createdAt` (いいね日時) をもとに、活動日を特定する。
     - 対応する日付の `likes_count` をインクリメントする。
@@ -94,6 +108,30 @@ Bluelogのデータベースに登録されている全てのユーザーを `us
 - `app/Models/DailyStat.php`
 - `app/Models/Media.php` (新規追加)
 - `database/migrations/*_create_media_table.php` (新規追加)
+
+### `users` テーブル定義
+
+| カラム名 | 型 | 説明 |
+|---|---|---|
+| `did` | `string` (PK) | Blueskyの分散型識別子 (Decentralized Identifier)。主キー。 |
+| `handle` | `string` | ユーザーハンドル (@example.bsky.social) |
+| `display_name` | `string` | 表示名 |
+| `description` | `text` | プロフィール説明文 |
+| `avatar_url` | `string` | アバター画像のURL |
+| `banner_url` | `string` | バナー画像のURL |
+| `followers_count` | `integer` | フォロワー数 |
+| `following_count` | `integer` | フォロー数 |
+| `registered_at` | `datetime` | Blueskyへのアカウント登録日時 (`app.bsky.actor.getProfile` の `createdAt` を格納) |
+| `last_login_at` | `datetime` | Bluelogへの最終ログイン日時 |
+| `last_fetched_at` | `datetime` | バッチ処理などで最後に投稿やいいねを取得した日時 |
+| `access_jwt` | `text` | Bluesky APIへのアクセストークン |
+| `refresh_jwt` | `text` | Bluesky APIへのリフレッシュトークン |
+| `last_synced_post_cid` | `string` | 最後に同期した投稿のCID |
+| `last_synced_like_cid` | `string` | 最後に同期した「いいね」のCID |
+| `is_private` | `boolean` | プロフィールの公開・非公開フラグ (デフォルト: `false`) |
+| `is_fetching` | `boolean` | データ取得中フラグ (デフォルト: `false`) |
+| `created_at` | `timestamp` | レコード作成日時。 |
+| `updated_at` | `timestamp` | レコード更新日時。 |
 
 ---
 
@@ -176,4 +214,4 @@ Bluelogのデータベースに登録されている全てのユーザーを `us
 
 ### 5.4. リプライ解決の正確性
 
-*   Blueskyのテキストエンティティは複雑な場合があるため、リプライの`start_index`と`end_index`が正確にテキストのバイトオフセットに対応していることを確認し、マルチバイト文字の扱いに注意します。
+*   Blueskyのテキストエンティティは複雑な場合があるため、リプライの`start_index`と`end_index`が正確にテキストのバイトオフセットに対応していることを確認し、マルチバイト文字の扱いにも注意します。

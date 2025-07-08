@@ -67,7 +67,7 @@
                     <span class="">フォロワー</span>
                 </div>
                 <div class="bg-opacity-50 p-2 rounded-md">
-                    <span class="font-bold">{{ $profile['follows_count'] ?? 0 }}</span>
+                    <span class="font-bold">{{ $profile['following_count'] ?? 0 }}</span>
                     <span class="">フォロー</span>
                 </div>
                 <div class="bg-opacity-50 p-2 rounded-md">

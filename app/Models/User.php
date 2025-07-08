@@ -11,26 +11,36 @@ use Illuminate\Support\Facades\Auth;
 // 追加
 
 /**
- * 
- *
- * @property string                          $did
- * @property string                          $handle
- * @property string|null                     $display_name
- * @property string|null                     $description
- * @property string|null                     $avatar_url
- * @property string|null                     $banner_url
- * @property int                             $followers_count
- * @property int                             $following_count
- * @property int                             $posts_count
- * @property \Illuminate\Support\Carbon|null $registered_at
- * @property \Illuminate\Support\Carbon|null $last_login_at
- * @property \Illuminate\Support\Carbon|null $last_fetched_at
- * @property string|null                     $access_jwt
- * @property string|null                     $refresh_jwt
- * @property bool                            $is_private
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property bool                            $is_fetching
+ * @property string                                                               $did
+ * @property string                                                               $handle
+ * @property string|null
+ *     $display_name
+ * @property string|null
+ *     $description
+ * @property string|null                                                          $avatar_url
+ * @property string|null                                                          $banner_url
+ * @property int
+ *     $followers_count
+ * @property int
+ *     $following_count
+ * @property \Illuminate\Support\Carbon|null
+ *     $registered_at
+ * @property \Illuminate\Support\Carbon|null
+ *     $last_login_at
+ * @property \Illuminate\Support\Carbon|null
+ *     $last_fetched_at
+ * @property string|null                                                          $access_jwt
+ * @property string|null
+ *     $refresh_jwt
+ * @property bool                                                                 $is_private
+ * @property \Illuminate\Support\Carbon|null                                      $created_at
+ * @property \Illuminate\Support\Carbon|null                                      $updated_at
+ * @property bool
+ *     $is_fetching
+ * @property string|null
+ *     $last_synced_post_cid
+ * @property string|null
+ *     $last_synced_like_cid
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User newQuery()
@@ -55,10 +65,17 @@ use Illuminate\Support\Facades\Auth;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Post> $posts
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Like> $likes
- * @property-read int|null $likes_count
- * @property-read int $total_days_from_registered_bluesky
- * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
- * @property-read int|null $notifications_count
+ * @property-read int|null
+ *     $likes_count
+ * @property-read int
+ *     $total_days_from_registered_bluesky
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification>
+ *     $notifications
+ * @property-read int|null
+ *     $notifications_count
+ * @property-read int|null                                                        $posts_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastSyncedLikeCid($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastSyncedPostCid($value)
  * @mixin \Eloquent
  */
 class User extends Authenticatable {
@@ -105,7 +122,6 @@ class User extends Authenticatable {
         'banner_url', // バナー画像のURL
         'followers_count', // フォロワー数
         'following_count', // フォロー数
-        'posts_count', // 投稿数
         'registered_at', // Blueskyに登録した日時
         'last_login_at', // 最終ログイン日時
         'last_fetched_at', // 最終データ取得日時
@@ -113,6 +129,8 @@ class User extends Authenticatable {
         'refresh_jwt', // Bluesky APIのリフレッシュトークン
         'is_private', // プロフィールが非公開かどうか
         'is_fetching', // データ取得中かどうかを示すフラグ
+        'last_synced_post_cid',
+        'last_synced_like_cid',
     ];
 
     /**
@@ -121,14 +139,15 @@ class User extends Authenticatable {
      * @var array
      */
     protected $casts = [
-        'followers_count' => 'integer',
-        'following_count' => 'integer',
-        'posts_count'     => 'integer',
-        'registered_at'   => 'datetime',
-        'last_login_at'   => 'datetime',
-        'last_fetched_at' => 'datetime',
-        'is_private'      => 'boolean',
-        'is_fetching'     => 'boolean',
+        'followers_count'      => 'integer',
+        'following_count'      => 'integer',
+        'registered_at'        => 'datetime',
+        'last_login_at'        => 'datetime',
+        'last_fetched_at'      => 'datetime',
+        'is_private'           => 'boolean',
+        'is_fetching'          => 'boolean',
+        'last_synced_post_cid' => 'string',
+        'last_synced_like_cid' => 'string',
     ];
 
     public function isFetchingData(): bool {

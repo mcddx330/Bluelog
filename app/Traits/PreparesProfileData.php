@@ -26,9 +26,9 @@ trait PreparesProfileData {
             'avatar'          => $user->avatar_url,
             'banner'          => $user->banner_url,
             'followers_count' => $user->followers_count,
-            'follows_count'   => $user->following_count,
-            'posts_count'     => $user->posts_count,
-            'likes_count'     => $user->likes->count(), // likes_countはリレーションから取得
+            'following_count' => $user->following_count,
+            'posts_count'     => $user->posts()->count(),
+            'likes_count'     => $user->likes()->count(),
             'created_at'      => $user->registered_at ? $user->registered_at->toIso8601String() : null,
         ];
 

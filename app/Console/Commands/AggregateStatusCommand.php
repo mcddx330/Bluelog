@@ -151,7 +151,10 @@ class AggregateStatusCommand extends Command {
     private function fetchAndStorePosts(BlueskyManager $bluesky, User $user): array {
         $this->comment(sprintf('[posts] %s の投稿取得開始...', $user->handle));
         $daily_data = [];
+        $newest_post_cid = null;
+        $last_synced_post_cid = $user->last_synced_post_cid;
         $cursor = null;
+        $new_count = 0;
 
         do {
             $response = $bluesky->getAuthorFeed(actor: $user->handle, limit: 100, cursor: $cursor);
@@ -159,25 +162,26 @@ class AggregateStatusCommand extends Command {
             $cursor = $body['cursor'] ?? null;
             $feeds = $body['feed'] ?? [];
 
-            $cids = collect($body['feed'] ?? [])->pluck('post.cid')->all();
-            $existing_posts = Post::query()
-                ->whereIn('cid', $cids)
-                ->where('did', $user->did)
-                ->get();
-            $new_feeds = [];
-            foreach ($feeds as $feed) {
-                if (!$existing_posts->contains('cid', $feed['post']['cid'])) {
-                    $new_feeds[] = $feed;
-                }
+            if (empty($feeds)) {
+                break; // 取得する投稿がない場合
             }
 
-            $new_feeds = $feeds;
-            $new_count = 0;
-            foreach ($new_feeds ?? [] as $item) {
-                $post_uri = $item['post']['uri'];
-                if (Post::where('uri', $post_uri)->exists()) {
-                    continue;
+            foreach ($feeds as $item) {
+                $post_cid = $item['post']['cid'];
+
+                // 初回ループで最新のCIDを記録
+                if ($newest_post_cid === null) {
+                    $newest_post_cid = $post_cid;
                 }
+
+                // 既に同期済みの投稿に到達した場合、処理を打ち切る
+                if ($last_synced_post_cid && $post_cid === $last_synced_post_cid) {
+                    $this->info("投稿: 既に同期済みのCID {$post_cid} に到達しました。");
+                    $cursor = null; // ループを終了させる
+                    break;
+                }
+
+                $post_uri = $item['post']['uri'];
                 $created_at = Carbon::parse($item['post']['record']['createdAt'])->setTimezone(config('app.timezone'));
                 $indexed_at = Carbon::parse($item['post']['indexedAt'])->setTimezone(config('app.timezone'));
                 $reply_to_handle = null;
@@ -198,22 +202,23 @@ class AggregateStatusCommand extends Command {
                     }
                 }
 
-                $post = Post::create([
-                    'uri'             => $post_uri,
-                    'cid'             => $item['post']['cid'],
-                    'did'             => $user->did,
-                    'rkey'            => basename($post_uri),
-                    'text'            => $item['post']['record']['text'] ?? '',
-                    'reply_to'        => $item['post']['record']['reply']['root']['uri'] ?? null,
-                    'reply_to_handle' => $reply_to_handle,
-                    'quote_of'        => $item['post']['record']['embed']['record']['uri'] ?? null,
-                    'is_repost'       => $item['post']['record']['$type'] === 'app.bsky.feed.repost',
-                    'likes_count'     => $item['post']['likeCount'] ?? 0,
-                    'replies_count'   => $item['post']['replyCount'] ?? 0,
-                    'reposts_count'   => $item['post']['repostCount'] ?? 0,
-                    'posted_at'       => $created_at,
-                    'indexed_at'      => $indexed_at,
-                ]);
+                $post = Post::updateOrCreate(
+                    ['cid' => $post_cid, 'did' => $user->did],
+                    [
+                        'uri'             => $post_uri,
+                        'rkey'            => basename($post_uri),
+                        'text'            => $item['post']['record']['text'] ?? '',
+                        'reply_to'        => $item['post']['record']['reply']['root']['uri'] ?? null,
+                        'reply_to_handle' => $reply_to_handle,
+                        'quote_of'        => $item['post']['record']['embed']['record']['uri'] ?? null,
+                        'is_repost'       => $item['post']['record']['$type'] === 'app.bsky.feed.repost',
+                        'likes_count'     => $item['post']['likeCount'] ?? 0,
+                        'replies_count'   => $item['post']['replyCount'] ?? 0,
+                        'reposts_count'   => $item['post']['repostCount'] ?? 0,
+                        'posted_at'       => $created_at,
+                        'indexed_at'      => $indexed_at,
+                    ]
+                );
 
                 // メディアの保存
                 if (isset($item['post']['embed'])) {
@@ -233,10 +238,10 @@ class AggregateStatusCommand extends Command {
                                         substr($item['post']['record']['text'], $facet['index']['byteStart'], $facet['index']['byteEnd'] -
                                                                                                               $facet['index']['byteStart']);
                                     // #を削除して保存
-                                    \App\Models\Hashtag::create([
-                                        'post_id' => $post->id,
-                                        'tag'     => ltrim($tag, '#'),
-                                    ]);
+                                    \App\Models\Hashtag::updateOrCreate(
+                                        ['post_id' => $post->id, 'tag' => ltrim($tag, '#')],
+                                        []
+                                    );
                                 }
                             }
                         }
@@ -268,6 +273,12 @@ class AggregateStatusCommand extends Command {
             $this->info(sprintf('[posts] ページ取得完了 (新規%d件) cursor=%s', $new_count, $cursor));
         } while ($cursor);
 
+        // last_synced_post_cid の更新
+        if ($newest_post_cid) {
+            $user->last_synced_post_cid = $newest_post_cid;
+            $user->save();
+        }
+
         $total_posts = collect($daily_data)->sum('posts_count');
         $total_replies = collect($daily_data)->sum('replies_count');
         $total_reposts = collect($daily_data)->sum('reposts_count');
@@ -280,7 +291,10 @@ class AggregateStatusCommand extends Command {
     private function fetchAndStoreLikes(BlueskyManager $bluesky, User $user): array {
         $this->comment(sprintf('[likes] %s のいいね取得開始...', $user->handle));
         $daily_data = [];
+        $newest_like_cid = null;
+        $last_synced_like_cid = $user->last_synced_like_cid;
         $cursor = null;
+        $new_count = 0;
 
         do {
             $response = $bluesky->listRecords(
@@ -292,31 +306,41 @@ class AggregateStatusCommand extends Command {
             $body = json_decode($response->getBody(), true);
             $cursor = $body['cursor'] ?? null;
             $likes = $body['records'] ?? [];
-            $existing_likes = Like::query()
-                ->whereIn('cid', collect($likes)->pluck('cid'))
-                ->where('did', $user->did)
-                ->get();
 
-            $existing_cids = $existing_likes->pluck('cid')->all();
-            $new_likes = array_filter($likes, function ($item) use ($existing_cids) {
-                return !in_array($item['cid'], $existing_cids, true);
-            });
+            if (empty($likes)) {
+                break; // 取得するいいねがない場合
+            }
 
-            $new_count = 0;
-            foreach ($new_likes as $item) {
+            foreach ($likes as $item) {
+                $like_cid = $item['cid'];
+
+                // 初回ループで最新のCIDを記録
+                if ($newest_like_cid === null) {
+                    $newest_like_cid = $like_cid;
+                }
+
+                // 既に同期済みのいいねに到達した場合、処理を打ち切る
+                if ($last_synced_like_cid && $like_cid === $last_synced_like_cid) {
+                    $this->info("いいね: 既に同期済みのCID {$like_cid} に到達しました。");
+                    $cursor = null; // ループを終了させる
+                    break;
+                }
+
                 $subject = $item['value']['subject'];
                 $created_at = Carbon::parse($item['value']['createdAt'])->setTimezone(config('app.timezone'));
 
                 preg_match('/^at:\/\/(did:plc:[a-zA-Z0-9]+)\//', $item['uri'], $matches);
                 $creator_did = $matches[1] ?? null;
 
-                Like::create([
-                    'cid'            => $item['cid'],
-                    'did'            => $user->did,
-                    'created_by_did' => $creator_did,
-                    'post_uri'       => $subject['uri'],
-                    'created_at'     => $created_at,
-                ]);
+                Like::updateOrCreate(
+                    ['cid' => $like_cid, 'did' => $user->did],
+                    [
+                        'uri'            => $item['uri'],
+                        'created_by_did' => $creator_did,
+                        'post_uri'       => $subject['uri'],
+                        'created_at'     => $created_at,
+                    ]
+                );
                 if (!isset($daily_data[$created_at->format('Y-m-d')])) {
                     $daily_data[$created_at->format('Y-m-d')] = 0;
                 }
@@ -330,6 +354,12 @@ class AggregateStatusCommand extends Command {
                 $cursor
             ));
         } while ($cursor);
+
+        // last_synced_like_cid の更新
+        if ($newest_like_cid) {
+            $user->last_synced_like_cid = $newest_like_cid;
+            $user->save();
+        }
 
         $total = collect($daily_data)->sum();
         $this->info(sprintf('[likes] 全体で %s件の新規いいねを登録しました。', number_format($total)));
