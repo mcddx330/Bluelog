@@ -7,9 +7,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Enums\UserAccountStatus;
 
 /**
- * 
+ *
  *
  * @property string $did
  * @property string $handle
@@ -31,14 +33,21 @@ use Illuminate\Support\Facades\Auth;
  * @property bool $is_fetching
  * @property string|null $last_synced_post_cid
  * @property string|null $last_synced_like_cid
+ * @property bool $is_early_adopter
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\DailyStat> $dailyStats
  * @property-read int|null $daily_stats_count
+ * @property-read UserAccountStatus $account_status
  * @property-read int $total_days_from_registered_bluesky
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\InvitationCode> $issuedInvitationCodes
+ * @property-read int|null $issued_invitation_codes_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Like> $likes
  * @property-read int|null $likes_count
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
+ * @property-read \App\Models\Patron|null $patron
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Post> $posts
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\InvitationCodeUsage> $usedInvitationCodes
+ * @property-read int|null $used_invitation_codes_count
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User newQuery()
@@ -53,6 +62,7 @@ use Illuminate\Support\Facades\Auth;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereFollowersCount($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereFollowingCount($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereHandle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereIsEarlyAdopter($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereIsFetching($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereIsPrivate($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastFetchedAt($value)
@@ -63,16 +73,40 @@ use Illuminate\Support\Facades\Auth;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRefreshJwt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRegisteredAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
- * @property bool $is_early_adopter
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\InvitationCode> $issuedInvitationCodes
- * @property-read int|null $issued_invitation_codes_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\InvitationCodeUsage> $usedInvitationCodes
- * @property-read int|null $used_invitation_codes_count
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereIsEarlyAdopter($value)
  * @mixin \Eloquent
  */
 class User extends Authenticatable {
     use HasFactory, Notifiable;
+
+    /**
+     * Get the patron record associated with the user.
+     */
+    public function patron(): HasOne
+    {
+        return $this->hasOne(Patron::class, 'user_did', 'did');
+    }
+
+    /**
+     * Get the user's account status.
+     *
+     * @return UserAccountStatus // 変更
+     */
+    public function getAccountStatusAttribute(): UserAccountStatus // 変更
+    {
+        $is_early_adopter = $this->is_early_adopter;
+        $is_patron = $this->patron()->exists();
+
+        switch (true) {
+            case $is_early_adopter && $is_patron:
+                return UserAccountStatus::EarlyAdopterAndPatron;
+            case $is_early_adopter:
+                return UserAccountStatus::EarlyAdopter;
+            case $is_patron:
+                return UserAccountStatus::Patron;
+            default:
+                return UserAccountStatus::Normal;
+        }
+    }
 
     /**
      * このモデルに関連付けられているテーブル名。

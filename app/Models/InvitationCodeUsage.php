@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 /**
- *
+ * 
  *
  * @property string $id
  * @property string $invitation_code_id
@@ -25,6 +25,7 @@ use Illuminate\Support\Str;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|InvitationCodeUsage whereInvitationCodeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|InvitationCodeUsage whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|InvitationCodeUsage whereUsedByUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|InvitationCodeUsage whereUsedByUserDid($value)
  * @mixin \Eloquent
  */
 class InvitationCodeUsage extends Model
