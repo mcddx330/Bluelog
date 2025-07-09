@@ -37,20 +37,22 @@
                     <a href="https://bsky.app/profile/{{ $profile['handle'] }}" target="_blank"
                        class="hover:underline relative">
                         {{ $profile['display_name'] ?? $profile['handle'] }}
-                        @php
-                            $badge = $user->account_status->emoji();
-                        @endphp
-                        <span
-                            id="profile-header-account-badge"
-                            class="text-xs absolute top-0 right-0 -translate-y-0
-                                @if (mb_strlen($badge) >= 2)
-                                    translate-x-8
-                                @elseif (mb_strlen($badge) < 2)
-                                    translate-x-6
-                                @endif
-                            ">
-                            {{ $badge }}
-                        </span>
+                        @if (!$user->invisible_badge)
+                            @php
+                                $badge = $user->account_status->emoji();
+                            @endphp
+                            <span
+                                id="profile-header-account-badge"
+                                class="text-xs absolute top-0 right-0 -translate-y-0
+                                    @if (mb_strlen($badge) >= 2)
+                                        translate-x-8
+                                    @elseif (mb_strlen($badge) < 2)
+                                        translate-x-6
+                                    @endif
+                                ">
+                                {{ $badge }}
+                            </span>
+                        @endif
                     </a>
                 </h2>
                 <p class="text-white">

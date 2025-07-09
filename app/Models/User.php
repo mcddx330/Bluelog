@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Enums\UserAccountStatus;
 
 /**
- *
+ * 
  *
  * @property string $did
  * @property string $handle
@@ -34,6 +34,7 @@ use App\Enums\UserAccountStatus;
  * @property string|null $last_synced_post_cid
  * @property string|null $last_synced_like_cid
  * @property bool $is_early_adopter
+ * @property bool $invisible_badge
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\DailyStat> $dailyStats
  * @property-read int|null $daily_stats_count
  * @property-read UserAccountStatus $account_status
@@ -62,6 +63,7 @@ use App\Enums\UserAccountStatus;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereFollowersCount($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereFollowingCount($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereHandle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereInvisibleBadge($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereIsEarlyAdopter($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereIsFetching($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereIsPrivate($value)
@@ -159,6 +161,7 @@ class User extends Authenticatable {
         'last_synced_post_cid',
         'last_synced_like_cid',
         'is_early_adopter',
+        'invisible_badge',
     ];
 
     /**
@@ -177,6 +180,7 @@ class User extends Authenticatable {
         'last_synced_post_cid' => 'string',
         'last_synced_like_cid' => 'string',
         'is_early_adopter'     => 'boolean',
+        'invisible_badge'      => 'boolean',
     ];
 
     public function isFetchingData(): bool {

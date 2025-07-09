@@ -52,6 +52,19 @@
                     チェックを入れると、あなたのプロフィール、投稿、いいねの一覧はあなた自身にしか表示されなくなります。</p>
             </div>
 
+            @if ($user->account_status->hasBadge())
+                <div class="mb-4">
+                    <label for="invisible_badge" class="inline-flex items-center">
+                        <input type="hidden" name="invisible_badge" value="0">
+                        <input type="checkbox" id="invisible_badge" name="invisible_badge" value="1"
+                               {{ $user->invisible_badge ? 'checked' : '' }} class="rounded h-5 w-5 text-blue-600">
+                        <span class="ml-2 text-gray-700">アカウントステータスバッジを非表示にする</span>
+                    </label>
+                    <p class="text-sm text-gray-500 mt-1">
+                        チェックを入れると、プロフィールに表示される「Bluelogにおける特典」を表すバッジが非表示になります。</p>
+                </div>
+            @endif
+
             <div>
                 <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                     保存
@@ -115,7 +128,8 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $code->expires_at ? $code->expires_at->format('Y-m-d H:i') : 'なし' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $code->current_usage_count }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-sm font-medium">
-                                    <form action="{{ route('settings.deleteInvitationCode', ['invitation_code_id' => $code->id]) }}" method="POST" onsubmit="return confirm('本当にこの招待コードを削除してもよろしいですか？');">
+                                    <form action="{{ route('settings.deleteInvitationCode', ['invitation_code_id' => $code->id]) }}"
+                                          method="POST" onsubmit="return confirm('本当にこの招待コードを削除してもよろしいですか？');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="text-red-600 hover:text-red-900">

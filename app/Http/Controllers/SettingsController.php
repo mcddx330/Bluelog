@@ -74,13 +74,13 @@ class SettingsController extends Controller {
 
         // リクエストデータのバリデーションを行います。
         $validated = $request->validate([
-            'is_private' => 'sometimes|boolean', // 'is_private'が存在する場合、boolean型であることを検証
+            'is_private' => 'sometimes|boolean',
+            'invisible_badge' => 'sometimes|boolean',
         ]);
 
         DB::transaction(function () use ($user, $validated) {
-            // バリデートされた値でユーザーの 'is_private' 属性を更新します。
-            // リクエストに 'is_private' が含まれていない場合は false をデフォルトとします。
             $user->is_private = $validated['is_private'] ?? false;
+            $user->invisible_badge = $validated['invisible_badge'] ?? false;
             $user->save();
         });
 
