@@ -2,32 +2,33 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Carbon;
 
 /**
- * 
- *
- * @property int $id
- * @property string $type
- * @property string $notifiable_type
- * @property int $notifiable_id
+ * @property int                     $id
+ * @property string                  $type
+ * @property string                  $notifiable_type
+ * @property int                     $notifiable_id
  * @property array<array-key, mixed> $data
- * @property \Illuminate\Support\Carbon|null $read_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Model|\Eloquent $notifiable
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereData($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereNotifiableId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereNotifiableType($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereReadAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereUpdatedAt($value)
+ * @property Carbon|null             $read_at
+ * @property Carbon|null             $created_at
+ * @property Carbon|null             $updated_at
+ * @property-read Model|\Eloquent    $notifiable
+ * @method static Builder<static>|Notification newModelQuery()
+ * @method static Builder<static>|Notification newQuery()
+ * @method static Builder<static>|Notification query()
+ * @method static Builder<static>|Notification whereCreatedAt($value)
+ * @method static Builder<static>|Notification whereData($value)
+ * @method static Builder<static>|Notification whereId($value)
+ * @method static Builder<static>|Notification whereNotifiableId($value)
+ * @method static Builder<static>|Notification whereNotifiableType($value)
+ * @method static Builder<static>|Notification whereReadAt($value)
+ * @method static Builder<static>|Notification whereType($value)
+ * @method static Builder<static>|Notification whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Notification extends Model {
@@ -36,12 +37,12 @@ class Notification extends Model {
     protected $guarded = [];
 
     protected $casts = [
-        'data'    => 'array',
-        'read_at' => 'datetime',
+        'data'       => 'array',
+        'read_at'    => 'datetime',
         'created_at' => 'datetime',
     ];
 
-    public function notifiable() {
+    public function notifiable(): MorphTo {
         return $this->morphTo();
     }
 }

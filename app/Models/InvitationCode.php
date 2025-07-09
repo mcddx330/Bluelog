@@ -2,39 +2,40 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
- * 
- *
- * @property string $id
- * @property string $code
- * @property string|null $issued_by_user_did
- * @property int|null $usage_limit
- * @property int $current_usage_count
- * @property \Illuminate\Support\Carbon|null $expires_at
- * @property string $status
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\User|null $issuer
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\InvitationCodeUsage> $usages
- * @property-read int|null $usages_count
- * @method static \Illuminate\Database\Eloquent\Builder<static>|InvitationCode newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|InvitationCode newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|InvitationCode query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|InvitationCode whereCode($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|InvitationCode whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|InvitationCode whereCurrentUsageCount($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|InvitationCode whereExpiresAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|InvitationCode whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|InvitationCode whereIssuedByUserDid($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|InvitationCode whereStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|InvitationCode whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|InvitationCode whereUsageLimit($value)
+ * @property string                                    $id
+ * @property string                                    $code
+ * @property string                                    $issued_by_user_did
+ * @property int|null                                  $usage_limit
+ * @property int                                       $current_usage_count
+ * @property Carbon|null                               $expires_at
+ * @property string                                    $status
+ * @property Carbon|null                               $created_at
+ * @property Carbon|null                               $updated_at
+ * @property-read User                                 $issuer
+ * @property-read Collection<int, InvitationCodeUsage> $usages
+ * @property-read int|null                             $usages_count
+ * @method static Builder<static>|InvitationCode newModelQuery()
+ * @method static Builder<static>|InvitationCode newQuery()
+ * @method static Builder<static>|InvitationCode query()
+ * @method static Builder<static>|InvitationCode whereCode($value)
+ * @method static Builder<static>|InvitationCode whereCreatedAt($value)
+ * @method static Builder<static>|InvitationCode whereCurrentUsageCount($value)
+ * @method static Builder<static>|InvitationCode whereExpiresAt($value)
+ * @method static Builder<static>|InvitationCode whereId($value)
+ * @method static Builder<static>|InvitationCode whereIssuedByUserDid($value)
+ * @method static Builder<static>|InvitationCode whereStatus($value)
+ * @method static Builder<static>|InvitationCode whereUpdatedAt($value)
+ * @method static Builder<static>|InvitationCode whereUsageLimit($value)
  * @mixin \Eloquent
  */
 class InvitationCode extends Model {

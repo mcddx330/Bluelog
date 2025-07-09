@@ -2,65 +2,63 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Traits\HasDatabaseSpecificQueries;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 
 /**
- * 
- *
- * @property string                                                                $id
- * @property string                                                                $did
- * @property string                                                                $uri
- * @property string                                                                $cid
- * @property string                                                                $rkey
- * @property string|null                                                           $text
- * @property string|null                                                           $reply_to
- * @property string|null                                                           $reply_to_handle
- * @property string|null                                                           $quote_of
- * @property bool                                                                  $has_media // メディアが含まれているか
- * @property bool                                                                  $is_repost
- * @property int                                                                   $likes_count
- * @property int                                                                   $replies_count
- * @property int                                                                   $reposts_count
- * @property \Illuminate\Support\Carbon|null                                       $posted_at
- * @property \Illuminate\Support\Carbon|null                                       $indexed_at
- * @property \Illuminate\Support\Carbon|null                                       $created_at
- * @property \Illuminate\Support\Carbon|null                                       $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Media> $media
- * @property-read int|null                                                         $media_count
- * @property-read \App\Models\User                                                 $user
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post whereCid($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post whereDid($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post whereHasMedia($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post whereIndexedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post whereIsRepost($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post whereLikesCount($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post wherePostedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post whereQuoteOf($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post whereRepliesCount($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post whereReplyTo($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post whereReplyToHandle($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post whereRepostsCount($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post whereRkey($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post whereText($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post whereUri($value)
- * @property string|null $posted_date_only
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Hashtag> $hashtags
- * @property-read int|null $hashtags_count
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Post wherePostedDateOnly($value)
- * @property-read \App\Models\User|null $reply_to_user
- * @method static \Illuminate\Database\Eloquent\Builder|Post postsCountByDayOfWeek(string $did)
- * @method static \Illuminate\Database\Eloquent\Builder|Post postsCountByHour(string $did)
+ * @property string                        $id
+ * @property string                        $did
+ * @property string                        $uri
+ * @property string                        $cid
+ * @property string                        $rkey
+ * @property string|null                   $text
+ * @property string|null                   $reply_to
+ * @property string|null                   $quote_of
+ * @property bool                          $is_repost
+ * @property int                           $likes_count
+ * @property int                           $replies_count
+ * @property int                           $reposts_count
+ * @property Carbon|null                   $posted_at
+ * @property Carbon|null                   $indexed_at
+ * @property Carbon|null                   $created_at
+ * @property Carbon|null                   $updated_at
+ * @property string|null                   $reply_to_handle
+ * @property string|null                   $posted_date_only
+ * @property-read Collection<int, Hashtag> $hashtags
+ * @property-read int|null                 $hashtags_count
+ * @property-read Collection<int, Media>   $media
+ * @property-read int|null                 $media_count
+ * @property-read User|null                $reply_to_user
+ * @property-read User                     $user
+ * @method static Builder<static>|Post newModelQuery()
+ * @method static Builder<static>|Post newQuery()
+ * @method static Builder<static>|Post postsCountByDayOfWeek(string $did)
+ * @method static Builder<static>|Post postsCountByHour(string $did)
+ * @method static Builder<static>|Post query()
+ * @method static Builder<static>|Post whereCid($value)
+ * @method static Builder<static>|Post whereCreatedAt($value)
+ * @method static Builder<static>|Post whereDid($value)
+ * @method static Builder<static>|Post whereId($value)
+ * @method static Builder<static>|Post whereIndexedAt($value)
+ * @method static Builder<static>|Post whereIsRepost($value)
+ * @method static Builder<static>|Post whereLikesCount($value)
+ * @method static Builder<static>|Post wherePostedAt($value)
+ * @method static Builder<static>|Post wherePostedDateOnly($value)
+ * @method static Builder<static>|Post whereQuoteOf($value)
+ * @method static Builder<static>|Post whereRepliesCount($value)
+ * @method static Builder<static>|Post whereReplyTo($value)
+ * @method static Builder<static>|Post whereReplyToHandle($value)
+ * @method static Builder<static>|Post whereRepostsCount($value)
+ * @method static Builder<static>|Post whereRkey($value)
+ * @method static Builder<static>|Post whereText($value)
+ * @method static Builder<static>|Post whereUpdatedAt($value)
+ * @method static Builder<static>|Post whereUri($value)
  * @mixin \Eloquent
  */
 class Post extends Model {
@@ -95,11 +93,8 @@ class Post extends Model {
 
     /**
      * モデルの「起動」メソッド。
-     * モデルが初期化されたときに実行されるロジックを定義します。
-     * ここでは、新しいPostモデルが作成される前にUUIDを生成します。
-     * @return void
      */
-    protected static function boot() {
+    protected static function boot(): void {
         parent::boot();
 
         // 新しいレコードが作成される前にUUIDを生成し、idとして設定します。
@@ -155,25 +150,21 @@ class Post extends Model {
         return $this->belongsTo(User::class, 'did', 'did');
     }
 
-    public function hashtags(): HasMany
-    {
+    public function hashtags(): HasMany {
         return $this->hasMany(Hashtag::class);
     }
 
-    public function reply_to_user(): BelongsTo
-    {
+    public function reply_to_user(): BelongsTo {
         return $this->belongsTo(User::class, 'reply_to_handle', 'handle');
     }
 
     /**
      * Scope a query to return posts count by day of week for a given DID.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string $did
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param Builder $query
+     * @param string  $did
      */
-    public function scopePostsCountByDayOfWeek(Builder $query, string $did): Builder
-    {
+    public function scopePostsCountByDayOfWeek(Builder $query, string $did): Builder {
         return $query->where('did', $did)
             ->selectRaw("{$this->getDayOfWeekSql()} as day_of_week, COUNT(*) as count")
             ->groupBy('day_of_week')
@@ -183,12 +174,10 @@ class Post extends Model {
     /**
      * Scope a query to return posts count by hour for a given DID.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string $did
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param Builder $query
+     * @param string  $did
      */
-    public function scopePostsCountByHour(Builder $query, string $did): Builder
-    {
+    public function scopePostsCountByHour(Builder $query, string $did): Builder {
         return $query->where('did', $did)
             ->selectRaw("{$this->getHourSql()} as hour, COUNT(*) as count")
             ->groupBy('hour')

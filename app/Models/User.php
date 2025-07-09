@@ -2,79 +2,82 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Notifications\DatabaseNotificationCollection;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Enums\UserAccountStatus;
 
 /**
- * 
- *
- * @property string $did
- * @property string $handle
- * @property string|null $display_name
- * @property string|null $description
- * @property string|null $avatar_url
- * @property string|null $banner_url
- * @property int $followers_count
- * @property int $following_count
- * @property-read int|null $posts_count
- * @property \Illuminate\Support\Carbon|null $registered_at
- * @property \Illuminate\Support\Carbon|null $last_login_at
- * @property \Illuminate\Support\Carbon|null $last_fetched_at
- * @property string|null $access_jwt
- * @property string|null $refresh_jwt
- * @property bool $is_private
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property bool $is_fetching
- * @property string|null $last_synced_post_cid
- * @property string|null $last_synced_like_cid
- * @property bool $is_early_adopter
- * @property bool $invisible_badge
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\DailyStat> $dailyStats
- * @property-read int|null $daily_stats_count
- * @property-read UserAccountStatus $account_status
- * @property-read int $total_days_from_registered_bluesky
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\InvitationCode> $issuedInvitationCodes
- * @property-read int|null $issued_invitation_codes_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Like> $likes
- * @property-read int|null $likes_count
- * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
- * @property-read int|null $notifications_count
- * @property-read \App\Models\Patron|null $patron
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Post> $posts
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\InvitationCodeUsage> $usedInvitationCodes
- * @property-read int|null $used_invitation_codes_count
+ * @property string                                                         $did
+ * @property string                                                         $handle
+ * @property string|null                                                    $display_name
+ * @property string|null                                                    $description
+ * @property string|null                                                    $avatar_url
+ * @property string|null                                                    $banner_url
+ * @property int                                                            $followers_count
+ * @property int                                                            $following_count
+ * @property-read int|null                                                  $posts_count
+ * @property Carbon|null                                                    $registered_at
+ * @property Carbon|null                                                    $last_login_at
+ * @property Carbon|null                                                    $last_fetched_at
+ * @property string|null                                                    $access_jwt
+ * @property string|null                                                    $refresh_jwt
+ * @property bool                                                           $is_private
+ * @property Carbon|null                                                    $created_at
+ * @property Carbon|null                                                    $updated_at
+ * @property bool                                                           $is_fetching
+ * @property string|null                                                    $last_synced_post_cid
+ * @property string|null                                                    $last_synced_like_cid
+ * @property bool                                                           $is_early_adopter
+ * @property bool                                                           $invisible_badge
+ * @property-read Collection<int, DailyStat>                                $dailyStats
+ * @property-read int|null                                                  $daily_stats_count
+ * @property-read UserAccountStatus                                         $account_status
+ * @property-read int                                                       $total_days_from_registered_bluesky
+ * @property-read Collection<int, InvitationCode>                           $issuedInvitationCodes
+ * @property-read int|null                                                  $issued_invitation_codes_count
+ * @property-read Collection<int, Like>                                     $likes
+ * @property-read int|null                                                  $likes_count
+ * @property-read DatabaseNotificationCollection<int, DatabaseNotification> $notifications
+ * @property-read int|null                                                  $notifications_count
+ * @property-read Patron|null                                               $patron
+ * @property-read Collection<int, Post>                                     $posts
+ * @property-read Collection<int, InvitationCodeUsage>                      $usedInvitationCodes
+ * @property-read int|null                                                  $used_invitation_codes_count
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereAccessJwt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereAvatarUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereBannerUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereDid($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereDisplayName($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereFollowersCount($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereFollowingCount($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereHandle($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereInvisibleBadge($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereIsEarlyAdopter($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereIsFetching($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereIsPrivate($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastFetchedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastLoginAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastSyncedLikeCid($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastSyncedPostCid($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePostsCount($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRefreshJwt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRegisteredAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
+ * @method static Builder<static>|User newModelQuery()
+ * @method static Builder<static>|User newQuery()
+ * @method static Builder<static>|User query()
+ * @method static Builder<static>|User whereAccessJwt($value)
+ * @method static Builder<static>|User whereAvatarUrl($value)
+ * @method static Builder<static>|User whereBannerUrl($value)
+ * @method static Builder<static>|User whereCreatedAt($value)
+ * @method static Builder<static>|User whereDescription($value)
+ * @method static Builder<static>|User whereDid($value)
+ * @method static Builder<static>|User whereDisplayName($value)
+ * @method static Builder<static>|User whereFollowersCount($value)
+ * @method static Builder<static>|User whereFollowingCount($value)
+ * @method static Builder<static>|User whereHandle($value)
+ * @method static Builder<static>|User whereInvisibleBadge($value)
+ * @method static Builder<static>|User whereIsEarlyAdopter($value)
+ * @method static Builder<static>|User whereIsFetching($value)
+ * @method static Builder<static>|User whereIsPrivate($value)
+ * @method static Builder<static>|User whereLastFetchedAt($value)
+ * @method static Builder<static>|User whereLastLoginAt($value)
+ * @method static Builder<static>|User whereLastSyncedLikeCid($value)
+ * @method static Builder<static>|User whereLastSyncedPostCid($value)
+ * @method static Builder<static>|User wherePostsCount($value)
+ * @method static Builder<static>|User whereRefreshJwt($value)
+ * @method static Builder<static>|User whereRegisteredAt($value)
+ * @method static Builder<static>|User whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class User extends Authenticatable {
@@ -83,15 +86,12 @@ class User extends Authenticatable {
     /**
      * Get the patron record associated with the user.
      */
-    public function patron(): HasOne
-    {
+    public function patron(): HasOne {
         return $this->hasOne(Patron::class, 'user_did', 'did');
     }
 
     /**
      * Get the user's account status.
-     *
-     * @return UserAccountStatus // 変更
      */
     public function getAccountStatusAttribute(): UserAccountStatus // 変更
     {
@@ -224,13 +224,11 @@ class User extends Authenticatable {
         return Auth::check() && (Auth::user()->did === $this->did);
     }
 
-    public function issuedInvitationCodes(): HasMany
-    {
+    public function issuedInvitationCodes(): HasMany {
         return $this->hasMany(InvitationCode::class, 'issued_by_user_did');
     }
 
-    public function usedInvitationCodes(): HasMany
-    {
+    public function usedInvitationCodes(): HasMany {
         return $this->hasMany(InvitationCodeUsage::class, 'used_by_user_id');
     }
 
