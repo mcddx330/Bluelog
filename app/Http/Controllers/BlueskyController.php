@@ -134,7 +134,7 @@ class BlueskyController extends Controller {
 
             // Blueskyから最新のプロフィール情報を取得します。
             $profile_response = Bluesky::getProfile($handle);
-            $profile_data = json_decode($profile_response->getBody(), true);
+            $profile_data = json_decode($profile_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
 
             $user = DB::transaction(function () use ($did, $handle, $profile_data, $access_jwt, $refresh_jwt, $data) {
                 // ユーザー情報をデータベースに保存または更新します。

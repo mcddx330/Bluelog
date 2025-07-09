@@ -24,12 +24,11 @@ use App\Enums\UserAccountStatus;
  * @property string|null                                                    $banner_url
  * @property int                                                            $followers_count
  * @property int                                                            $following_count
- * @property-read int|null                                                  $posts_count
- * @property Carbon|null                                                    $registered_at
- * @property Carbon|null                                                    $last_login_at
+ * @property Carbon                                                         $registered_at
+ * @property Carbon                                                         $last_login_at
  * @property Carbon|null                                                    $last_fetched_at
- * @property string|null                                                    $access_jwt
- * @property string|null                                                    $refresh_jwt
+ * @property mixed                                                          $access_jwt
+ * @property mixed                                                          $refresh_jwt
  * @property bool                                                           $is_private
  * @property Carbon|null                                                    $created_at
  * @property Carbon|null                                                    $updated_at
@@ -50,6 +49,7 @@ use App\Enums\UserAccountStatus;
  * @property-read int|null                                                  $notifications_count
  * @property-read Patron|null                                               $patron
  * @property-read Collection<int, Post>                                     $posts
+ * @property-read int|null                                                  $posts_count
  * @property-read Collection<int, InvitationCodeUsage>                      $usedInvitationCodes
  * @property-read int|null                                                  $used_invitation_codes_count
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
@@ -74,7 +74,6 @@ use App\Enums\UserAccountStatus;
  * @method static Builder<static>|User whereLastLoginAt($value)
  * @method static Builder<static>|User whereLastSyncedLikeCid($value)
  * @method static Builder<static>|User whereLastSyncedPostCid($value)
- * @method static Builder<static>|User wherePostsCount($value)
  * @method static Builder<static>|User whereRefreshJwt($value)
  * @method static Builder<static>|User whereRegisteredAt($value)
  * @method static Builder<static>|User whereUpdatedAt($value)
@@ -175,6 +174,8 @@ class User extends Authenticatable {
         'registered_at'        => 'datetime',
         'last_login_at'        => 'datetime',
         'last_fetched_at'      => 'datetime',
+        'access_jwt'           => 'encrypted',
+        'refresh_jwt'          => 'encrypted',
         'is_private'           => 'boolean',
         'is_fetching'          => 'boolean',
         'last_synced_post_cid' => 'string',
