@@ -116,7 +116,7 @@ class BlueskyController extends Controller {
         $data = $request->validate([
             'identifier' => 'required|string',
             'password'   => 'required|string',
-            'invitation_code' => 'nullable|string|exists:invitation_codes,code',
+            'invitation_code' => 'nullable|string|size:16|exists:invitation_codes,code',
         ]);
 
         try {

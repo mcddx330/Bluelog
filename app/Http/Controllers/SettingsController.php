@@ -210,16 +210,21 @@ class SettingsController extends Controller {
     public function generateInvitationCode(Request $request) {
         $user = Auth::user();
 
+        // ユーザーが認証されていない場合
+        if (!($user instanceof User)) {
+            return redirect()->route('login')->with('error', 'ログインしてください。');
+        }
+
         // 既存のアクティブな招待コードを非アクティブ化
         InvitationCode::where('issued_by_user_did', $user->did)
             ->where('status', 'active')
             ->update(['status' => 'inactive']);
 
         $invitation_code = InvitationCode::create([
-            'code'               => Str::random(10), // 10文字のランダムなコード
+            'code'               => Str::random(16), // 16文字のランダムなコード
             'issued_by_user_did' => $user->did,
             'usage_limit'        => null, // 利用回数制限なし
-            'expires_at'         => now()->addMonth(), // 1ヶ月後に有効期限切れ
+            'expires_at'         => now()->addMonth()->endOfDay(), // 1ヶ月後に有効期限切れ
             'status'             => 'active',
         ]);
 
