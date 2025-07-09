@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('invitation_codes', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('code')->index()->unique();
-            $table->uuid('issued_by_user_did')->index();
+            $table->string('code', 16)->index()->unique();
+            $table->string('issued_by_user_did')->index();
             $table->unsignedInteger('usage_limit')->nullable();
             $table->unsignedBigInteger('current_usage_count')->default(0);
             $table->timestamp('expires_at')->nullable();
@@ -27,7 +27,7 @@ return new class extends Migration
         Schema::create('invitation_code_usages', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('invitation_code_id')->index();
-            $table->uuid('used_by_user_did')->index();
+            $table->string('used_by_user_did')->index();
             $table->timestamps();
 
             $table->foreign('invitation_code_id')->references('id')->on('invitation_codes')->onDelete('cascade');

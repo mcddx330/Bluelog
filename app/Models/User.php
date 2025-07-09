@@ -44,12 +44,10 @@ use App\Enums\UserAccountStatus;
  * @property-read Collection<int, InvitationCode>                           $issuedInvitationCodes
  * @property-read int|null                                                  $issued_invitation_codes_count
  * @property-read Collection<int, Like>                                     $likes
- * @property-read int|null                                                  $likes_count
  * @property-read DatabaseNotificationCollection<int, DatabaseNotification> $notifications
  * @property-read int|null                                                  $notifications_count
  * @property-read Patron|null                                               $patron
  * @property-read Collection<int, Post>                                     $posts
- * @property-read int|null                                                  $posts_count
  * @property-read Collection<int, InvitationCodeUsage>                      $usedInvitationCodes
  * @property-read int|null                                                  $used_invitation_codes_count
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])

@@ -68,8 +68,8 @@
 
 ```php
 Schema::table('users', function (Blueprint $table) {
-    $table->string('post_fetch_cursor')->nullable()->after('refresh_jwt')->comment('投稿取得用のカーソル');
-    $table->string('like_fetch_cursor')->nullable()->after('post_fetch_cursor')->comment('いいね取得用のカーソル');
+    $table->string('last_synced_post_cid')->nullable()->after('refresh_jwt')->comment('最後に同期した投稿のCID');
+    $table->string('last_synced_like_cid')->nullable()->after('last_synced_post_cid')->comment('最後に同期したいのCID');
 });
 ```
 

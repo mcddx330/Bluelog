@@ -16,155 +16,157 @@
 
 ### `users` テーブル定義
 
-| カラム名 | 型 | 説明 |
-|---|---|---|
-| `did` | `string` (PK) | Blueskyの分散型識別子 (Decentralized Identifier)。主キー。 |
-| `handle` | `string` | ユーザーハンドル (@example.bsky.social) |
-| `display_name` | `string` | 表示名 |
-| `description` | `text` | プロフィール説明文 |
-| `avatar_url` | `string` | アバター画像のURL |
-| `banner_url` | `string` | バナー画像のURL |
-| `followers_count` | `integer` | フォロワー数 |
-| `following_count` | `integer` | フォロー数 |
-| `registered_at` | `datetime` | Blueskyへのアカウント登録日時 (`app.bsky.actor.getProfile` の `createdAt` を格納) |
-| `last_login_at` | `datetime` | Bluelogへの最終ログイン日時 |
-| `last_fetched_at` | `datetime` | バッチ処理などで最後に投稿やいいねを取得した日時 |
-| `access_jwt` | `text` | Bluesky APIへのアクセストークン |
-| `refresh_jwt` | `text` | Bluesky APIへのリフレッシュトークン |
-| `last_synced_post_cid` | `string` | 最後に同期した投稿のCID |
-| `last_synced_like_cid` | `string` | 最後に同期した「いいね」のCID |
-| `is_private` | `boolean` | プロフィールの公開・非公開フラグ (デフォルト: `false`) |
-| `is_fetching` | `boolean` | データ取得中フラグ (デフォルト: `false`) |
-| `created_at` | `timestamp` | レコード作成日時。 |
-| `updated_at` | `timestamp` | レコード更新日時。 |
-| `is_early_adopter` | `boolean` | 招待コードを使用して登録した早期採用者であるかを示すフラグ (デフォルト: `false`) |
-| `invisible_badge` | `boolean` | アカウントステータスバッジの非表示フラグ (デフォルト: `false`) |
+| カラム名                   | 型             | 説明                                                                 |
+|------------------------|---------------|--------------------------------------------------------------------|
+| `did`                  | `string` (PK) | Blueskyの分散型識別子 (Decentralized Identifier)。主キー。                     |
+| `handle`               | `string`      | ユーザーハンドル (@example.bsky.social)                                    |
+| `display_name`         | `string`      | 表示名                                                                |
+| `description`          | `text`        | プロフィール説明文                                                          |
+| `avatar_url`           | `string`      | アバター画像のURL                                                         |
+| `banner_url`           | `string`      | バナー画像のURL                                                          |
+| `followers_count`      | `integer`     | フォロワー数                                                             |
+| `following_count`      | `integer`     | フォロー数                                                              |
+| `registered_at`        | `datetime`    | Blueskyへのアカウント登録日時 (`app.bsky.actor.getProfile` の `createdAt` を格納) |
+| `last_login_at`        | `datetime`    | Bluelogへの最終ログイン日時                                                  |
+| `last_fetched_at`      | `datetime`    | バッチ処理などで最後に投稿やいいねを取得した日時                                           |
+| `access_jwt`           | `text`        | Bluesky APIへのアクセストークン                                              |
+| `refresh_jwt`          | `text`        | Bluesky APIへのリフレッシュトークン                                            |
+| `last_synced_post_cid` | `string`      | 最後に同期した投稿のCID                                                      |
+| `last_synced_like_cid` | `string`      | 最後に同期した「いいね」のCID                                                   |
+| `is_private`           | `boolean`     | プロフィールの公開・非公開フラグ (デフォルト: `false`)                                  |
+| `is_fetching`          | `boolean`     | データ取得中フラグ (デフォルト: `false`)                                         |
+| `is_early_adopter`     | `boolean`     | 招待コードを使用して登録した早期採用者であるかを示すフラグ (デフォルト: `false`)                     |
+| `invisible_badge`      | `boolean`     | アカウントステータスバッジの非表示フラグ (デフォルト: `false`)                              |
+| `created_at`           | `timestamp`   | レコード作成日時。                                                          |
+| `updated_at`           | `timestamp`   | レコード更新日時。                                                          |
+| `is_early_adopter`     | `boolean`     | 招待コードを使用して登録した早期採用者であるかを示すフラグ (デフォルト: `false`)                     |
+| `invisible_badge`      | `boolean`     | アカウントステータスバッジの非表示フラグ (デフォルト: `false`)                              |
 
 ### `invitation_codes` テーブル定義 (新規)
 招待コードの管理と複数回利用を可能にするためのテーブル。
 
-| カラム名 | 型 | 説明 |
-|---|---|---|
-| `id` | `uuid` (PK) | 招待コードレコードのUUID。 |
-| `code` | `string` | 招待コード文字列。ユニーク。 |
-| `issued_by_user_did` | `uuid` (FK) | この招待コードを発行したユーザーのDID (`users` テーブルの外部キー)。管理者が発行した場合は `NULL`。 |
-| `usage_limit` | `integer` | この招待コードが使用できる最大回数。`NULL` の場合は無制限。 |
-| `current_usage_count` | `integer` | この招待コードが現在までに使用された回数 (デフォルト: `0`)。 |
-| `expires_at` | `datetime` | この招待コードの有効期限。`NULL` の場合は無期限。 |
-| `status` | `enum` | 招待コードの状態 (`active`, `inactive`)。`active` は現在有効なコード、`inactive` は再生成などにより無効化されたコード。デフォルト `active`。 |
-| `created_at` | `timestamp` | レコード作成日時。 |
-| `updated_at` | `timestamp` | レコード更新日時。 |
+| カラム名                  | 型             | 説明                                                                                               |
+|-----------------------|---------------|--------------------------------------------------------------------------------------------------|
+| `id`                  | `uuid` (PK)   | 招待コードレコードのUUID。                                                                                  |
+| `code`                | `string`      | 招待コード文字列。ユニーク。                                                                                   |
+| `issued_by_user_did`  | `string` (FK) | この招待コードを発行したユーザーのDID (`users` テーブルの外部キー)。                                     |
+| `usage_limit`         | `integer`     | この招待コードが使用できる最大回数。`NULL` の場合は無制限。                                                                |
+| `current_usage_count` | `integer`     | この招待コードが現在までに使用された回数 (デフォルト: `0`)。                                                               |
+| `expires_at`          | `datetime`    | この招待コードの有効期限。`NULL` の場合は無期限。                                                                     |
+| `status`              | `enum`        | 招待コードの状態 (`active`, `inactive`)。`active` は現在有効なコード、`inactive` は再生成などにより無効化されたコード。デフォルト `active`。 |
+| `created_at`          | `timestamp`   | レコード作成日時。                                                                                        |
+| `updated_at`          | `timestamp`   | レコード更新日時。                                                                                        |
 
 ### `invitation_code_usages` テーブル定義 (新規)
 招待コードの使用履歴を記録するためのテーブル。
 
-| カラム名                 | 型 | 説明 |
-|----------------------|---|---|
-| `id`                 | `uuid` (PK) | 使用履歴レコードのUUID。 |
+| カラム名                 | 型           | 説明                                            |
+|----------------------|-------------|-----------------------------------------------|
+| `id`                 | `uuid` (PK) | 使用履歴レコードのUUID。                                |
 | `invitation_code_id` | `uuid` (FK) | 使用された招待コードのID (`invitation_codes` テーブルの外部キー)。 |
-| `used_by_user_did`   | `uuid` (FK) | この招待コードを使用したユーザーのDID (`users` テーブルの外部キー)。 |
-| `created_at`         | `timestamp` | レコード作成日時 (招待コードが使用された日時)。 |
-| `updated_at`         | `timestamp` | レコード更新日時。 |
+| `used_by_user_did`   | `uuid` (FK) | この招待コードを使用したユーザーのDID (`users` テーブルの外部キー)。     |
+| `created_at`         | `timestamp` | レコード作成日時 (招待コードが使用された日時)。                     |
+| `updated_at`         | `timestamp` | レコード更新日時。                                     |
 
 ### `patrons` テーブル定義 (新規)
 パトロンとして登録されたBlueskyユーザーのハンドルとDIDを管理するためのテーブル。
 
-| カラム名 | 型 | 説明 |
-|---|---|---|
-| `id` | `uuid` (PK) | パトロンレコードのUUID。 |
-| `handle` | `string` | パトロンのBlueskyハンドル (@username)。CSVから読み込む情報。ユニーク。 |
-| `did` | `string` | パトロンのBluesky DID。`users`テーブルの`did`への外部キー。ユニーク。 |
-| `created_at` | `timestamp` | レコード作成日時。 |
-| `updated_at` | `timestamp` | レコード更新日時。 |
+| カラム名         | 型             | 説明                                             |
+|--------------|---------------|------------------------------------------------|
+| `id`         | `bigint` (PK) | パトロンレコードのID。自動増分。                              |
+| `handle`     | `string`      | パトロンのBlueskyハンドル (@username)。CSVから読み込む情報。ユニーク。 |
+| `user_did`   | `string`      | パトロンのBluesky DID。`users`テーブルの`did`への外部キー。ユニーク。 |
+| `created_at` | `timestamp`   | レコード作成日時。                                      |
+| `updated_at` | `timestamp`   | レコード更新日時。                                      |
 
 ### `posts` テーブル定義
 
-| カラム名 | 型 | 説明 |
-|---|---|---|
-| `id` | `uuid` (PK) | ポストレコードのUUID。 |
-| `did` | `string` | 投稿者のDID (usersテーブルの外部キー)。 |
-| `uri` | `string` | ポストのURI (`at://` 形式)。 |
-| `cid` | `string` | コンテンツID。 |
-| `rkey` | `string` | レコードキー。 |
-| `text` | `longText` | ポスト本文。 |
-| `reply_to` | `string` | リプライ先URI。 |
-| `reply_to_handle` | `string` | リプライ先のハンドル。 |
-| `quote_of` | `string` | 引用元URI。 |
-| `is_repost` | `boolean` | リポストかどうか。 |
-| `likes_count` | `unsignedBigInteger` | いいね数。 |
-| `replies_count` | `unsignedBigInteger` | リプライ数。 |
-| `reposts_count` | `unsignedBigInteger` | リポスト数。 |
-| `posted_at` | `datetime` | 投稿日時。 |
-| `indexed_at` | `datetime` | インデックス日時。 |
-| `posted_date_only` | `date` | 投稿日 (日付のみ)。 |
-| `created_at` | `timestamp` | レコード作成日時。 |
-| `updated_at` | `timestamp` | レコード更新日時。 |
+| カラム名               | 型                    | 説明                              |
+|--------------------|----------------------|---------------------------------|
+| `id`               | `uuid` (PK)          | ポストレコードのUUID。                   |
+| `did`              | `string`             | 投稿者のDID (usersテーブルの外部キー)。       |
+| `uri`              | `string`             | ポストのURI (`at://` 形式)。           |
+| `cid`              | `string`             | コンテンツID。                        |
+| `rkey`             | `string`             | レコードキー。                         |
+| `text`             | `longText`           | ポスト本文。                          |
+| `reply_to`         | `string`             | リプライ先URI。                       |
+| `reply_to_handle`  | `string`             | リプライ先のハンドル。                     |
+| `quote_of`         | `string`             | 引用元URI。                         |
+| `is_repost`        | `boolean`            | リポストかどうか。                       |
+| `likes_count`      | `unsignedBigInteger` | いいね数。                           |
+| `replies_count`    | `unsignedBigInteger` | リプライ数。                          |
+| `reposts_count`    | `unsignedBigInteger` | リポスト数。                          |
+| `posted_at`        | `datetime`           | 投稿日時。                           |
+| `indexed_at`       | `datetime`           | インデックス日時。                       |
+| `posted_date_only` | `date`               | 投稿日 (日付のみ)。`posted_at` から生成される。 |
+| `created_at`       | `timestamp`          | レコード作成日時。                       |
+| `updated_at`       | `timestamp`          | レコード更新日時。                       |
 
 ### `media` テーブル定義
 
-| カラム名 | 型 | 説明 |
-|---|---|---|
-| `id` | `uuid` (PK) | メディアレコードのUUID。 |
-| `post_cid` | `string` | 対象のポストCID (postsテーブルの外部キー)。 |
-| `type` | `string` | メディアタイプ (image, video等)。 |
-| `alt_text` | `text` | 代替テキスト。 |
-| `size` | `string` | ファイルサイズ。 |
-| `mime` | `string` | MIME Type。 |
-| `fullsize_url` | `string` | フルサイズ画像URL。 |
-| `thumbnail_url` | `string` | サムネイルURL。 |
-| `aspect_ratio_width` | `unsignedInteger` | アスペクト比（幅）。 |
-| `aspect_ratio_height` | `unsignedInteger` | アスペクト比（高さ）。 |
-| `created_at` | `timestamp` | レコード作成日時。 |
-| `updated_at` | `timestamp` | レコード更新日時。 |
+| カラム名                  | 型                 | 説明                          |
+|-----------------------|-------------------|-----------------------------|
+| `id`                  | `uuid` (PK)       | メディアレコードのUUID。              |
+| `post_cid`            | `string`          | 対象のポストCID (postsテーブルの外部キー)。 |
+| `type`                | `string`          | メディアタイプ (image, video等)。    |
+| `alt_text`            | `text`            | 代替テキスト。                     |
+| `size`                | `string`          | ファイルサイズ。                    |
+| `mime`                | `string`          | MIME Type。                  |
+| `fullsize_url`        | `string`          | フルサイズ画像URL。                 |
+| `thumbnail_url`       | `string`          | サムネイルURL。                   |
+| `aspect_ratio_width`  | `unsignedInteger` | アスペクト比（幅）。                  |
+| `aspect_ratio_height` | `unsignedInteger` | アスペクト比（高さ）。                 |
+| `created_at`          | `timestamp`       | レコード作成日時。                   |
+| `updated_at`          | `timestamp`       | レコード更新日時。                   |
 
 ### `likes` テーブル定義
 
-| カラム名 | 型 | 説明 |
-|---|---|---|
-| `did` | `string` (PK) | Blueskyの分散型識別子 (Decentralized Identifier)。主キー。 |
-| `handle` | `string` | ユーザーハンドル (@example.bsky.social) |
-| `display_name` | `string` | 表示名 |
-| `description` | `text` | プロフィール説明文 |
-| `avatar_url` | `string` | アバター画像のURL |
-| `banner_url` | `string` | バナー画像のURL |
-| `followers_count` | `integer` | フォロワー数 |
-| `following_count` | `integer` | フォロー数 |
-| `posts_count` | `unsignedBigInteger` | 総ポスト数 |
-| `registered_at` | `datetime` | Blueskyへのアカウント登録日時 (`app.bsky.actor.getProfile` の `createdAt` を格納) |
-| `last_login_at` | `datetime` | Bluelogへの最終ログイン日時 |
-| `last_fetched_at` | `datetime` | バッチ処理などで最後に投稿やいいねを取得した日時 |
-| `access_jwt` | `text` | Bluesky APIへのアクセストークン |
-| `refresh_jwt` | `text` | Bluesky APIへのリフレッシュトークン |
-| `post_fetch_cursor` | `string` | 投稿の差分取得に使用するカーソル |
-| `like_fetch_cursor` | `string` | いいねの差分取得に使用するカーソル |
-| `is_private` | `boolean` | プロフィールの公開・非公開フラグ (デフォルト: `false`) |
-| `is_fetching` | `boolean` | データ取得中フラグ (デフォルト: `false`) |
-| `created_at` | `timestamp` | レコード作成日時。 |
-| `updated_at` | `timestamp` | レコード更新日時。 |
+| カラム名             | 型           | 説明                                |
+|------------------|-------------|-----------------------------------|
+| `id`             | `uuid` (PK) | いいねレコードのUUID。                     |
+| `did`            | `string`    | いいねを行ったユーザーのDID (usersテーブルの外部キー)。 |
+| `post_uri`       | `string`    | いいねしたポストのURI (`at://` 形式)。        |
+| `cid`            | `string`    | いいねしたポストのCID。                     |
+| `post_posted_at` | `timestamp` | いいねしたポストの投稿日時。                    |
+| `created_by_did` | `string`    | いいねしたポストの作成者のDID。                 |
+| `created_at`     | `timestamp` | レコード作成日時 (いいねした日時)。               |
+| `updated_at`     | `timestamp` | レコード更新日時。                         |
 
-### `likes` テーブル定義
 
-| カラム名 | 型 | 説明 |
-|---|---|---|
-| `id` | `uuid` (PK) | いいねレコードのUUID。 |
-| `did` | `string` | いいねを行ったユーザーのDID (usersテーブルの外部キー)。 |
-| `post_uri` | `string` | いいねしたポストのURI (`at://` 形式)。 |
-| `cid` | `string` | いいねしたポストのCID。 |
-| `post_posted_at` | `timestamp` | いいねしたポストの投稿日時。 |
-| `created_by_did` | `string` | いいねしたポストの作成者のDID。 |
-| `post_posted_at` | `timestamp` | いいねしたポストの投稿日時。 |
-| `created_at` | `timestamp` | レコード作成日時 (いいねした日時)。 |
-| `updated_at` | `timestamp` | レコード更新日時。 |
 
 ### `hashtags` テーブル定義
 
-| カラム名 | 型 | 説明 |
-|---|---|---|
-| `id` | `uuid` (PK) | 各ハッシュタグレコードの一意な識別子。 |
-| `post_id` | `uuid` | 関連する`posts`テーブルの`id`（UUID）を参照。 |
-| `tag` | `string` | ハッシュタグのテキスト。 |
-| `created_at` | `timestamp` | レコード作成日時。 |
-| `updated_at` | `timestamp` | レコード更新日時。 |
+| カラム名         | 型           | 説明                             |
+|--------------|-------------|--------------------------------|
+| `id`         | `uuid` (PK) | 各ハッシュタグレコードの一意な識別子。            |
+| `post_id`    | `uuid`      | 関連する`posts`テーブルの`id`（UUID）を参照。 |
+| `tag`        | `string`    | ハッシュタグのテキスト。                   |
+| `created_at` | `timestamp` | レコード作成日時。                      |
+| `updated_at` | `timestamp` | レコード更新日時。                      |
+
+### `replies` テーブル定義
+
+| カラム名              | 型           | 説明                             |
+|-------------------|-------------|--------------------------------|
+| `id`              | `uuid` (PK) | リプライレコードのUUID。                 |
+| `post_id`         | `uuid` (FK) | 関連する`posts`テーブルの`id`（UUID）を参照。 |
+| `reply_to_did`    | `string`    | リプライされたユーザーのDID。               |
+| `reply_to_handle` | `string`    | リプライされたユーザーのハンドル。              |
+| `created_at`      | `timestamp` | レコード作成日時。                      |
+| `updated_at`      | `timestamp` | レコード更新日時。                      |
+
+### `notifications` テーブル定義
+
+| カラム名              | 型           | 説明            |
+|-------------------|-------------|---------------|
+| `id`              | `uuid` (PK) | 通知レコードのUUID。  |
+| `type`            | `string`    | 通知のタイプ。       |
+| `notifiable_type` | `string`    | 通知対象のモデルのタイプ。 |
+| `notifiable_id`   | `bigint`    | 通知対象のモデルのID。  |
+| `data`            | `longText`  | 通知データ。        |
+| `read_at`         | `timestamp` | 既読日時。         |
+| `created_at`      | `timestamp` | レコード作成日時。     |
+| `updated_at`      | `timestamp` | レコード更新日時。     |
 
 ## 4. 機能仕様
 
@@ -506,15 +508,15 @@ Bluelogでは、ユーザーの特性をより詳細に把握し、それに応�
 
 これらの情報源を組み合わせることで、`User` モデルに以下のようなステータス判定ロジックを実装し、アプリケーション全体で一貫したユーザー特性の識別を可能にします。
 
-| `is_early_adopter` | `patrons` テーブルに存在 | `invisible_badge` | 判定されるステータス | 結果 (バッジ表示) | 説明 |
-|---|---|---|---|---|---|
-| ✅ | ✅ | ❌ | `early_adopter_and_patron` | 表示あり ✅ | 早期採用者であり、かつパトロンであるユーザー。 |
-| ✅ | ❌ | ❌ | `early_adopter` | 表示あり ✅ | 早期採用者であるが、パトロンではないユーザー。 |
-| ❌ | ✅ | ❌ | `patron` | 表示あり ✅ | 早期採用者ではないが、パトロンであるユーザー。 |
-| ❌ | ❌ | ❌ | `normal` | 表示なし ❌ | 早期採用者でもパトロンでもない通常のユーザー。 |
-| ✅ | ✅ | ✅ | `early_adopter_and_patron` | 表示なし ❌ | 早期採用者であり、かつパトロンであるユーザー。 |
-| ✅ | ❌ | ✅ | `early_adopter` | 表示なし ❌ | 早期採用者であるが、パトロンではないユーザー。 |
-| ❌ | ✅ | ✅ | `patron` | 表示なし ❌ | 早期採用者ではないが、パトロンであるユーザー。 |
-| ❌ | ❌ | ✅ | `normal` | 表示なし ❌ | 早期採用者でもパトロンでもない通常のユーザー。 |
+| `is_early_adopter` | `patrons` テーブルに存在 | `invisible_badge` | 判定されるステータス                 | 結果 (バッジ表示) | 説明                      |
+|--------------------|-------------------|-------------------|----------------------------|------------|-------------------------|
+| ✅                  | ✅                 | ❌                 | `early_adopter_and_patron` | 表示あり ✅     | 早期採用者であり、かつパトロンであるユーザー。 |
+| ✅                  | ❌                 | ❌                 | `early_adopter`            | 表示あり ✅     | 早期採用者であるが、パトロンではないユーザー。 |
+| ❌                  | ✅                 | ❌                 | `patron`                   | 表示あり ✅     | 早期採用者ではないが、パトロンであるユーザー。 |
+| ❌                  | ❌                 | ❌                 | `normal`                   | 表示なし ❌     | 早期採用者でもパトロンでもない通常のユーザー。 |
+| ✅                  | ✅                 | ✅                 | `early_adopter_and_patron` | 表示なし ❌     | 早期採用者であり、かつパトロンであるユーザー。 |
+| ✅                  | ❌                 | ✅                 | `early_adopter`            | 表示なし ❌     | 早期採用者であるが、パトロンではないユーザー。 |
+| ❌                  | ✅                 | ✅                 | `patron`                   | 表示なし ❌     | 早期採用者ではないが、パトロンであるユーザー。 |
+| ❌                  | ❌                 | ✅                 | `normal`                   | 表示なし ❌     | 早期採用者でもパトロンでもない通常のユーザー。 |
 
 この判定ロジックは、`User` モデルのアクセサ（例: `getAccountStatusAttribute()`）として実装することで、`$user->account_status` のように簡潔にユーザーのステータスを取得できるようになります。ビューでは、`$user->invisible_badge` の値に基づいてバッジの表示/非表示を制御します。これにより、ビューやコントローラーなど、アプリケーションの様々な場所でユーザーの特性に応じた処理を柔軟に記述できます。
