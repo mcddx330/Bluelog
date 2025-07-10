@@ -13,21 +13,22 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use App\Enums\UserAccountStatus;
 
 /**
- * @property string                                                         $did
- * @property string                                                         $handle
- * @property string|null                                                    $display_name
- * @property string|null                                                    $description
- * @property string|null                                                    $avatar_url
- * @property string|null                                                    $banner_url
- * @property int                                                            $followers_count
- * @property int                                                            $following_count
- * @property Carbon                                                         $registered_at
- * @property Carbon                                                         $last_login_at
- * @property Carbon|null                                                    $last_fetched_at
- * @property mixed                                                          $access_jwt
+ *
+ *
+ * @property string $did
+ * @property string $handle
+ * @property string|null $display_name
+ * @property string|null $description
+ * @property string|null $avatar_url
+ * @property string|null $banner_url
+ * @property int $followers_count
+ * @property int $following_count
+ * @property Carbon $registered_at
+ * @property Carbon $last_login_at
+ * @property Carbon|null $last_fetched_at
+ * @property mixed $access_jwt
  * @property mixed                                                          $refresh_jwt
  * @property bool                                                           $is_private
  * @property Carbon|null                                                    $created_at
@@ -37,17 +38,19 @@ use App\Enums\UserAccountStatus;
  * @property string|null                                                    $last_synced_like_cid
  * @property bool                                                           $is_early_adopter
  * @property bool                                                           $invisible_badge
+ * @property int                                                            $is_admin
  * @property-read Collection<int, DailyStat>                                $dailyStats
  * @property-read int|null                                                  $daily_stats_count
- * @property-read UserAccountStatus                                         $account_status
  * @property-read int                                                       $total_days_from_registered_bluesky
  * @property-read Collection<int, InvitationCode>                           $issuedInvitationCodes
  * @property-read int|null                                                  $issued_invitation_codes_count
  * @property-read Collection<int, Like>                                     $likes
+ * @property-read int|null                                                  $likes_count
  * @property-read DatabaseNotificationCollection<int, DatabaseNotification> $notifications
  * @property-read int|null                                                  $notifications_count
  * @property-read Patron|null                                               $patron
  * @property-read Collection<int, Post>                                     $posts
+ * @property-read int|null                                                  $posts_count
  * @property-read Collection<int, InvitationCodeUsage>                      $usedInvitationCodes
  * @property-read int|null                                                  $used_invitation_codes_count
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
@@ -65,6 +68,7 @@ use App\Enums\UserAccountStatus;
  * @method static Builder<static>|User whereFollowingCount($value)
  * @method static Builder<static>|User whereHandle($value)
  * @method static Builder<static>|User whereInvisibleBadge($value)
+ * @method static Builder<static>|User whereIsAdmin($value)
  * @method static Builder<static>|User whereIsEarlyAdopter($value)
  * @method static Builder<static>|User whereIsFetching($value)
  * @method static Builder<static>|User whereIsPrivate($value)
@@ -85,26 +89,6 @@ class User extends Authenticatable {
      */
     public function patron(): HasOne {
         return $this->hasOne(Patron::class, 'user_did', 'did');
-    }
-
-    /**
-     * Get the user's account status.
-     */
-    public function getAccountStatusAttribute(): UserAccountStatus // 変更
-    {
-        $is_early_adopter = $this->is_early_adopter;
-        $is_patron = $this->patron()->exists();
-
-        switch (true) {
-            case $is_early_adopter && $is_patron:
-                return UserAccountStatus::EarlyAdopterAndPatron;
-            case $is_early_adopter:
-                return UserAccountStatus::EarlyAdopter;
-            case $is_patron:
-                return UserAccountStatus::Patron;
-            default:
-                return UserAccountStatus::Normal;
-        }
     }
 
     /**

@@ -52,18 +52,16 @@
                     チェックを入れると、あなたのプロフィール、投稿、いいねの一覧はあなた自身にしか表示されなくなります。</p>
             </div>
 
-            @if ($user->account_status->hasBadge())
-                <div class="mb-4">
-                    <label for="invisible_badge" class="inline-flex items-center">
-                        <input type="hidden" name="invisible_badge" value="0">
-                        <input type="checkbox" id="invisible_badge" name="invisible_badge" value="1"
-                               {{ $user->invisible_badge ? 'checked' : '' }} class="rounded h-5 w-5 text-blue-600">
-                        <span class="ml-2 text-gray-700">アカウントステータスバッジを非表示にする</span>
-                    </label>
-                    <p class="text-sm text-gray-500 mt-1">
-                        チェックを入れると、プロフィールに表示される「Bluelogにおける特典」を表すバッジが非表示になります。</p>
-                </div>
-            @endif
+            <div class="mb-4">
+                <label for="invisible_badge" class="inline-flex items-center">
+                    <input type="hidden" name="invisible_badge" value="0">
+                    <input type="checkbox" id="invisible_badge" name="invisible_badge" value="1"
+                           {{ $user->invisible_badge ? 'checked' : '' }} class="rounded h-5 w-5 text-blue-600">
+                    <span class="ml-2 text-gray-700">アカウントステータスバッジを非表示にする</span>
+                </label>
+                <p class="text-sm text-gray-500 mt-1">
+                    チェックを入れると、プロフィールに表示される「Bluelogにおける特典」を表すバッジが非表示になります。</p>
+            </div>
 
             <div>
                 <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
