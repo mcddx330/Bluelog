@@ -24,11 +24,23 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
-            'remember_token' => Str::random(10),
+            'did' => 'did:plc:' . Str::random(10),
+            'handle' => fake()->userName() . '.bsky.social',
+            'display_name' => fake()->name(),
+            'description' => fake()->sentence(),
+            'avatar_url' => fake()->imageUrl(),
+            'banner_url' => fake()->imageUrl(),
+            'followers_count' => fake()->numberBetween(0, 1000),
+            'following_count' => fake()->numberBetween(0, 500),
+            'posts_count' => fake()->numberBetween(0, 2000),
+            'registered_at' => fake()->dateTimeThisYear(),
+            'last_login_at' => now(),
+            'access_jwt' => Str::random(64),
+            'refresh_jwt' => Str::random(64),
+            'is_private' => false,
+            'is_fetching' => false,
+            'is_early_adopter' => false,
+            'invisible_badge' => false,
         ];
     }
 

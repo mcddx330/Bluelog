@@ -17,9 +17,17 @@ use App\Providers\AppServiceProvider;
 use League\Csv\Writer;
 use App\Models\InvitationCode;
 use Illuminate\Support\Str;
+use App\Services\SettingService;
 
 class SettingsController extends Controller {
     use PreparesProfileData, BuildViewBreadcrumbs;
+
+    protected SettingService $settingService;
+
+    public function __construct(SettingService $settingService)
+    {
+        $this->settingService = $settingService;
+    }
 
     /**
      * ユーザー設定の編集フォームを表示します。
@@ -49,10 +57,68 @@ class SettingsController extends Controller {
 
         $invitation_codes = InvitationCode::where('issued_by_user_did', $user->did)->with('usages.user')->get();
 
+        $registration_mode = $this->settingService->get('registration_mode', $this->settingService::KEY_SINGLE_USER_ONLY);
+        $allowed_single_user_did = $this->settingService->get('allowed_single_user_did');
+
+        $all_users = User::all();
+
         return view(
             'settings.edit', array_merge(
-            compact('user', 'breadcrumbs', 'invitation_codes'),
+            compact('user', 'breadcrumbs', 'invitation_codes', 'registration_mode', 'allowed_single_user_did', 'all_users'),
         ), $this->prepareCommonProfileData($user));
+    }
+
+    /**
+     * アプリケーションの登録モードを更新します。
+     *
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function updateRegistrationMode(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!($user instanceof User) || !$user->is_admin) {
+            return redirect()->route('login')->with('error', '管理者権限がありません。');
+        }
+
+        $validated = $request->validate([
+            'registration_mode' => 'required|in:single_user_only,invitation_required',
+            'allowed_single_user_did' => 'nullable|exists:users,did',
+        ]);
+
+        if ($validated['registration_mode'] === 'single_user_only') {
+            $request->validate([
+                'allowed_single_user_did' => 'required|exists:users,did',
+            ]);
+        }
+
+        DB::transaction(function () use ($validated) {
+            $this->settingService->set(
+                'registration_mode',
+                $validated['registration_mode'],
+                'string',
+                'アプリケーションのユーザー登録モード'
+            );
+
+            $this->settingService->set(
+                'allowed_single_user_did',
+                $validated['allowed_single_user_did'],
+                'string',
+                'シングルユーザーモードの場合に許可される唯一のユーザーのDID'
+            );
+
+            // registration_mode が invitation_required の場合、registration_invitation_code_required を true に設定
+            // それ以外の場合は false に設定
+            $this->settingService->set(
+                'registration_invitation_code_required',
+                $validated['registration_mode'] === 'invitation_required',
+                'boolean',
+                '新規ユーザー登録時に招待コードの入力を必須とするかどうか (registration_modeに統合)'
+            );
+        });
+
+        return back()->with('status', '利用者設定を更新しました。');
     }
 
     /**

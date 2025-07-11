@@ -17,6 +17,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/{handle}/full-sync-data', [SettingsController::class, 'fullSyncData'])->name('settings.fullSyncData');
     Route::post('/settings/invitation-code/generate', [SettingsController::class, 'generateInvitationCode'])->name('settings.generateInvitationCode');
     Route::delete('/settings/invitation-code/{invitation_code_id}', [SettingsController::class, 'deleteInvitationCode'])->name('settings.deleteInvitationCode');
+    Route::post('/settings/registration-mode', [SettingsController::class, 'updateRegistrationMode'])->name('settings.updateRegistrationMode');
 });
 
 Route::get('/', [IndexController::class, 'index'])->name('index');

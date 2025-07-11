@@ -12,10 +12,10 @@
 <body class="bg-gray-100">
     <x-header />
     <div class="container mx-auto p-4">
-        @if(session('error'))
+        @if(session('error_message'))
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
                 <strong class="font-bold">Error!</strong>
-                <span class="block sm:inline">{{ session('error') }}</span>
+                <span class="block sm:inline">{{ session('error_message') }}</span>
             </div>
         @endif
 
@@ -23,7 +23,9 @@
             <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-4" role="alert">
                 @foreach ($notifications as $notification)
                     <span class="block sm:inline">
-                        [{{ $notification->created_at->format('Y/m/d H:i') }}]
+                        @if (isset($notification->created_at))
+                            [{{ $notification->created_at->format('Y/m/d H:i') }}]
+                        @endif
                         {{ $notification->data['error_message'] ?? '不明な通知' }}
                     </span>
                 @endforeach

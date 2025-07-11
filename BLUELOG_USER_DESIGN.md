@@ -247,6 +247,7 @@ Blueskyには「Logged-out visibility」（ログアウトしたユーザーか�
 ### 4.1. ログイン (`doLogin`)
 
 1.  ユーザーがIdentifierとパスワードを入力してログインする。
+1.1 identifierもしくはパスワードが一致していない、存在していない場合はエラーを返す。
 2.  `com.atproto.server.createSession` を使用してBlueskyのセッションを作成し、`accessJwt` と `refreshJwt` を取得する。
 3.  取得したセッション情報を使用して `app.bsky.actor.getProfile` を呼び出し、最新のプロフィール情報を取得する。
 

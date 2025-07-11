@@ -22,6 +22,7 @@ use Revolution\Bluesky\Facades\Bluesky;
 use Revolution\Bluesky\Session\AbstractSession;
 use Revolution\Bluesky\Session\LegacySession;
 use App\Traits\PreparesProfileData;
+use App\Services\SettingService;
 
 class BlueskyController extends Controller {
     use PreparesProfileData, BuildViewBreadcrumbs;
@@ -44,12 +45,15 @@ class BlueskyController extends Controller {
      */
     private $apiUrlRefresh = 'https://bsky.social/xrpc/com.atproto.server.refreshSession';
 
+    protected SettingService $settingService;
+
     /**
      * BlueskyControllerのコンストラクタ。
      * セッションから既存のBlueskyセッション情報を取得し、プロパティに設定します。
      */
-    public function __construct() {
+    public function __construct(SettingService $settingService) {
         $this->bluesky_session = $this->bluesky_session ?? Session::get('bluesky_session');
+        $this->settingService = $settingService;
     }
 
     /**
@@ -99,7 +103,9 @@ class BlueskyController extends Controller {
      * @return View
      */
     public function login() {
-        return view('login');
+        $registration_mode = $this->settingService->get('registration_mode');
+
+        return view('login', compact('registration_mode'));
     }
 
     /**
@@ -113,10 +119,25 @@ class BlueskyController extends Controller {
      */
     public function doLogin(Request $request) {
         // 入力データのバリデーションを行います。
-        $data = $request->validate([
+        $rules = [
             'identifier' => 'required|string',
             'password'   => 'required|string',
-            'invitation_code' => 'nullable|string|size:16|exists:invitation_codes,code',
+        ];
+
+        $registration_mode = $this->settingService->get('registration_mode');
+        $rules['invitation_code'] = 'nullable|string|size:16|exists:invitation_codes,code';
+        if ($registration_mode === 'invitation_required') {
+            $rules['invitation_code'] = 'required|string|size:16|exists:invitation_codes,code';
+        } else if ($registration_mode === 'single_user_only') {
+            $rules['invitation_code'] = 'nullable';
+        }
+
+        $data = $request->validate($rules, [
+            'invitation_code.size'     => '招待コードは:size文字である必要があります。',
+            'invitation_code.required' => '招待コードは必須です。',
+            'invitation_code.exists'   => '無効な招待コードです。',
+            'identifier.required'      => 'ユーザー名またはメールアドレスは必須です。',
+            'password.required'        => 'パスワードは必須です。',
         ]);
 
         try {
@@ -132,11 +153,23 @@ class BlueskyController extends Controller {
             $did = $this->bluesky_session->get('did', null);
             $handle = $this->bluesky_session->get('handle', null);
 
+            // 登録モードのチェック
+            if (User::all()->count() >= 1 && $registration_mode === 'single_user_only') {
+                $allowed_single_user_did = $this->settingService->get('allowed_single_user_did');
+                if ($did !== $allowed_single_user_did) {
+                    Auth::logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+                    return redirect(route('login'))
+                        ->with('error_message', 'このBluelogインスタンスは特定のアカウントのみに制限されています。');
+                }
+            }
+
             // Blueskyから最新のプロフィール情報を取得します。
             $profile_response = Bluesky::getProfile($handle);
             $profile_data = json_decode($profile_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
 
-            $user = DB::transaction(function () use ($did, $handle, $profile_data, $access_jwt, $refresh_jwt, $data) {
+            $user = DB::transaction(function () use ($did, $handle, $profile_data, $access_jwt, $refresh_jwt, $data, $registration_mode) {
                 // ユーザー情報をデータベースに保存または更新します。
                 // DIDをキーとして、既存のユーザーがいれば更新、いなければ新規作成します。
                 $user = User::updateOrCreate(
@@ -157,8 +190,20 @@ class BlueskyController extends Controller {
                     ]
                 );
 
+                // 最初のユーザーがログインした場合、そのユーザーのDIDをallowed_single_user_didに設定
+                if ($user->wasRecentlyCreated && User::count() === 1) {
+                    $this->settingService->set(
+                        'allowed_single_user_did',
+                        $user->did,
+                        'string',
+                        'シングルユーザーモードの場合に許可される唯一のユーザーのDID'
+                    );
+                    $user->is_admin = true;
+                    $user->save();
+                }
+
                 // 新規ユーザーの場合、招待コードを処理
-                if ($user->wasRecentlyCreated && isset($data['invitation_code'])) {
+                if ($user->wasRecentlyCreated && $registration_mode === 'invitation_required') {
                     $invitation_code = InvitationCode::where('code', $data['invitation_code'])->first();
                     if ($invitation_code && $invitation_code->isValid()) {
                         $user->is_early_adopter = true;
@@ -168,8 +213,12 @@ class BlueskyController extends Controller {
 
                         InvitationCodeUsage::create([
                             'invitation_code_id' => $invitation_code->id,
-                            'used_by_user_did'    => $user->did,
+                            'used_by_user_did'   => $user->did,
                         ]);
+                    } else {
+                        // 招待コードが無効な場合はユーザーを削除し、エラーを返す
+                        $user->delete();
+                        throw new \Exception('無効な招待コードです。');
                     }
                 }
 
@@ -198,7 +247,8 @@ class BlueskyController extends Controller {
                 $e->getMessage()
             ));
 
-            return back()->with('error', 'プロフィール表示中にエラーが発生しました。詳細についてはログを確認してください。');
+            return redirect(route('login'))
+                ->with('error_message', 'ログイン中にエラーが発生しました。詳細についてはログを確認してください。');
         }
     }
 

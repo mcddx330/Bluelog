@@ -28,6 +28,10 @@ return new class extends Migration {
                 ->default(0)
                 ->index()
                 ->comment('フォロー数');
+            $table->unsignedBigInteger('posts_count')
+                ->default(0)
+                ->index()
+                ->comment('投稿数');
 
             // 日時情報
             $table->dateTime('registered_at')->comment('Bluesky登録日');
@@ -38,8 +42,14 @@ return new class extends Migration {
             $table->text('access_jwt')->comment('アクセストークン');
             $table->text('refresh_jwt')->comment('リフレッシュトークン');
 
+            // 早期採用者フラグ
+            $table->boolean('is_early_adopter')->default(false)->comment('早期採用者フラグ');
+
             // 設定
             $table->boolean('is_private')->index()->default(false)->comment('非公開フラグ');
+
+            // 不可視バッジフラグ
+            $table->boolean('invisible_badge')->default(false)->comment('不可視バッジフラグ');
 
             // Laravel標準の作成・更新日時
             $table->timestamps(); // created_at, updated_at

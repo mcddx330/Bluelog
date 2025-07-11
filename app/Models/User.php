@@ -143,6 +143,7 @@ class User extends Authenticatable {
         'last_synced_like_cid',
         'is_early_adopter',
         'invisible_badge',
+        'is_admin',
     ];
 
     /**
@@ -164,6 +165,7 @@ class User extends Authenticatable {
         'last_synced_like_cid' => 'string',
         'is_early_adopter'     => 'boolean',
         'invisible_badge'      => 'boolean',
+        'is_admin'             => 'boolean',
     ];
 
     public function isFetchingData(): bool {
@@ -212,7 +214,7 @@ class User extends Authenticatable {
     }
 
     public function usedInvitationCodes(): HasMany {
-        return $this->hasMany(InvitationCodeUsage::class, 'used_by_user_id');
+        return $this->hasMany(InvitationCodeUsage::class, 'used_by_user_did');
     }
 
 }
