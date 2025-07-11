@@ -18,6 +18,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/settings/invitation-code/generate', [SettingsController::class, 'generateInvitationCode'])->name('settings.generateInvitationCode');
     Route::delete('/settings/invitation-code/{invitation_code_id}', [SettingsController::class, 'deleteInvitationCode'])->name('settings.deleteInvitationCode');
     Route::post('/settings/registration-mode', [SettingsController::class, 'updateRegistrationMode'])->name('settings.updateRegistrationMode');
+    Route::post('/settings/crawling', [SettingsController::class, 'updateCrawlingSetting'])->name('settings.updateCrawlingSetting');
 });
 
 Route::get('/', [IndexController::class, 'index'])->name('index');
@@ -28,6 +29,8 @@ Route::post('/logout', [BlueskyController::class, 'doLogout'])->name('logout');
 Route::post('/notifications/mark-as-read', [BlueskyController::class, 'markNotificationsAsRead'])->name('notifications.markAsRead');
 
 Route::get('/faq', [FaqController::class, 'index'])->name('faq');
+
+Route::get('/robots.txt', [\App\Http\Controllers\RobotsController::class, 'show'])->name('robots');
 
 Route::get('/{handle}', [BlueskyController::class, 'showProfile'])->name('profile.show');
 Route::get('/{handle}/likes', [BlueskyLikesController::class, 'show'])->name('profile.likes');

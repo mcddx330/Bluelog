@@ -59,12 +59,13 @@ class SettingsController extends Controller {
 
         $registration_mode = $this->settingService->get('registration_mode', $this->settingService::KEY_SINGLE_USER_ONLY);
         $allowed_single_user_did = $this->settingService->get('allowed_single_user_did');
+        $deny_all_crawlers = $this->settingService->get('deny_all_crawlers', false);
 
         $all_users = User::all();
 
         return view(
             'settings.edit', array_merge(
-            compact('user', 'breadcrumbs', 'invitation_codes', 'registration_mode', 'allowed_single_user_did', 'all_users'),
+            compact('user', 'breadcrumbs', 'invitation_codes', 'registration_mode', 'allowed_single_user_did', 'all_users', 'deny_all_crawlers'),
         ), $this->prepareCommonProfileData($user));
     }
 
@@ -119,6 +120,36 @@ class SettingsController extends Controller {
         });
 
         return back()->with('status', '利用者設定を更新しました。');
+    }
+
+    /**
+     * クローリング設定を更新します。
+     *
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function updateCrawlingSetting(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!($user instanceof User)) {
+            return redirect()->route('login')->with('error', 'ログインしてください。');
+        }
+
+        $validated = $request->validate([
+            'crawling_setting' => 'required|in:none,deny_all',
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            $this->settingService->set(
+                'deny_all_crawlers',
+                $validated['crawling_setting'] === 'deny_all',
+                'boolean',
+                'robots.txt で全てのクローラーを拒否するかどうか'
+            );
+        });
+
+        return back()->with('status', 'クローリング設定を更新しました。');
     }
 
     /**

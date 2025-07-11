@@ -6,6 +6,7 @@
     'registration_mode',
     'allowed_single_user_did',
     'all_users',
+    'deny_all_crawlers',
 ])
 
 <div class="lg:w-2/3">
@@ -35,6 +36,26 @@
                 class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                 最新状態に更新
             </button>
+        </form>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg p-6 mt-6">
+        <h2 class="text-xl font-bold mb-4">クローリング設定</h2>
+        <form action="{{ route('settings.updateCrawlingSetting') }}" method="POST" class="space-y-4">
+            @csrf
+            <label class="inline-flex items-center">
+                <input type="radio" name="crawling_setting" value="none" class="form-radio" {{ !$deny_all_crawlers ? 'checked' : '' }}>
+                <span class="ml-2 text-gray-700">何も設定しない</span>
+            </label>
+            <label class="inline-flex items-center">
+                <input type="radio" name="crawling_setting" value="deny_all" class="form-radio" {{ $deny_all_crawlers ? 'checked' : '' }}>
+                <span class="ml-2 text-gray-700">全てを拒否する</span>
+            </label>
+            <div>
+                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    保存
+                </button>
+            </div>
         </form>
     </div>
 
