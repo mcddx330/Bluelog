@@ -6,7 +6,7 @@
     <x-is-fetching-message :is_fetching="$is_fetching"/>
 
     <div class="lg:flex lg:space-x-8 mt-8">
-        <x-settings-main-content :user="$user" :profile="$profile" :handle="$handle" :invitation_codes="$invitation_codes" :registration_mode="$registration_mode" :allowed_single_user_did="$allowed_single_user_did" :all_users="$all_users"/>
+        <x-settings-main-content :user="$user" :profile="$profile" :handle="$handle" :invitation_codes="$invitation_codes" :registration_mode="$registration_mode" :allowed_single_user_did="$allowed_single_user_did" :all_users="$all_users" :deny_all_crawlers="$deny_all_crawlers"/>
         <x-profile-sidebar :user="$user" :handle="$handle" :archives="$archives" :top_replies="$top_replies" :top_hashtags="$top_hashtags"/>
     </div>
 @endsection
