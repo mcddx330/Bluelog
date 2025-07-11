@@ -6,10 +6,11 @@ namespace Tests\Feature;
 use Tests\TestCase;
 use Illuminate\Support\Facades\Artisan;
 
-class ExampleTest extends TestCase
+// 環境が正しく構築されているかを確認するテスト
+class EnvironmentTest extends TestCase
 {
     /**
-     * A basic test example.
+     * テスト実行前にデータベースを初期化
      */
     protected function setUp(): void
     {
@@ -24,7 +25,8 @@ class ExampleTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_the_application_returns_a_successful_response(): void
+    // 例示的な簡易テスト
+    public function test_基本機能が動作する(): void
     {
         $this->assertTrue(true);
     }

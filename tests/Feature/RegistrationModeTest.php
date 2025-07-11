@@ -15,6 +15,7 @@ use Revolution\Bluesky\Session\LegacySession;
 use Mockery;
 use Tests\TestCase;
 
+// 登録モードごとの挙動を検証するテスト
 class RegistrationModeTest extends TestCase
 {
 
@@ -36,7 +37,8 @@ class RegistrationModeTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_single_user_mode_rejects_other_user(): void
+    // シングルユーザーモードで他ユーザーのログインを拒否するか確認
+    public function test_シングルユーザーモードで別ユーザーが拒否される(): void
     {
         $allowed_user = User::factory()->create([
             'did' => 'did:allowed',
@@ -75,7 +77,8 @@ class RegistrationModeTest extends TestCase
         $this->assertDatabaseCount('users', 1);
     }
 
-    public function test_invitation_required_mode_allows_login_with_valid_code(): void
+    // 招待コード必須モードで有効なコードがあればログインできるか確認
+    public function test_招待コード必須モードで有効なコードならログインできる(): void
     {
         $issuer = User::factory()->create([
             'did' => 'did:issuer',
