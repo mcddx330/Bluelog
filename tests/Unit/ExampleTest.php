@@ -11,6 +11,7 @@ class ExampleTest extends TestCase
      */
     public function test_真が真である(): void
     {
+        // 単純なアサーションの例
         $this->assertTrue(true);
     }
 }

@@ -16,18 +16,22 @@ class EnvironmentTest extends TestCase
     {
         parent::setUp();
 
+        // 毎回マイグレーションを実行しテーブルをリセット
         Artisan::call('migrate:fresh', ['--no-interaction' => true]);
-        config(['app.key' => 'base64:'.base64_encode(random_bytes(32))]);
+        // 動作に必要なアプリケーションキーを生成
+        config(['app.key' => 'base64:' . base64_encode(random_bytes(32))]);
     }
 
     protected function tearDown(): void
     {
+        // 現状特に後処理は無いが親クラスの処理を呼び出す
         parent::tearDown();
     }
 
     // 例示的な簡易テスト
     public function test_基本機能が動作する(): void
     {
+        // PHPUnitが正しく機能するかを確認
         $this->assertTrue(true);
     }
 }
