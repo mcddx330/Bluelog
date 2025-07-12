@@ -285,9 +285,9 @@ class SettingsController extends Controller {
             return redirect()->route('login')->with('error', 'ログインしてください。');
         }
 
-        // status:aggregate コマンドを非同期で実行
+        // bluelog:aggregate コマンドを非同期で実行
         dispatch(function () use ($user) {
-            Artisan::call('status:aggregate', [
+            Artisan::call('bluelog:aggregate', [
                 '--did'       => $user->did,
                 '--full-sync' => true,
                 '--force'     => true,

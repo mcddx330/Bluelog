@@ -228,10 +228,10 @@ class BlueskyController extends Controller {
                 return $user;
             });
 
-            // 初回ログイン時にstatus:aggregateコマンドを非同期実行
+            // 初回ログイン時にbluelog:aggregateコマンドを非同期実行
             if (($user instanceof User) && !($user->posts->count() > 0)) {
                 dispatch(function () {
-                    Artisan::call('status:aggregate');
+                    Artisan::call('bluelog:aggregate');
                 })->onQueue('default');
             }
 
@@ -461,9 +461,9 @@ class BlueskyController extends Controller {
     public function updateProfileData(string $handle) {
         $user = User::where('handle', $handle)->firstOrFail();
 
-        // status:aggregate コマンドを非同期で実行
+        // bluelog:aggregate コマンドを非同期で実行
         dispatch(function () use ($user) {
-            Artisan::call('status:aggregate', [
+            Artisan::call('bluelog:aggregate', [
                 '--did' => $user->did,
             ]);
         })->onQueue('default');

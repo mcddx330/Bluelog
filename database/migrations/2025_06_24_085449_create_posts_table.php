@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration {
     /**
@@ -49,6 +50,11 @@ return new class extends Migration {
             // $table->index('posted_at');
             // $table->index('indexed_at');
         });
+
+        if (Schema::getConnection()->getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE posts ENGINE=Mroonga');
+            DB::statement('CREATE FULLTEXT INDEX posts_text ON posts(text) COMMENT "parser \"TokenMecab\""');
+        }
     }
 
     /**

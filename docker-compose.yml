@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    command: php artisan serve --host=0.0.0.0 --port=8000
+
+  queue:
+    build: .
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+    command: php artisan queue:work --tries=1
+
+  scheduler:
+    build: .
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+    command: php artisan schedule:work
+
+  db:
+    build: ./docker/mariadb
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bluelog
+      MYSQL_USER: bluelog
+      MYSQL_PASSWORD: password
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./docker/mariadb/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  db-data:

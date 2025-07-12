@@ -18,6 +18,22 @@ BlueLog は、Bluesky ユーザーの投稿や「いいね」を収集し、時�
 - Node.js 18 以上
 - SQLite3 (開発用デフォルト)
 
+## Docker 環境
+
+`docker-compose.yml` を用意しており、PHP 8.4 と MariaDB (Mroonga プラグイン入り) を使った環境を簡単に立ち上げられます。
+
+```bash
+cp .env.example .env
+docker compose build
+docker compose up -d
+```
+
+Web サーバーは `http://localhost:8000` で起動します。初回起動後、以下でマイグレーションを実行してください。
+
+```bash
+docker compose exec app php artisan migrate
+```
+
 ## セットアップ手順
 
 1. リポジトリをクローンし依存パッケージをインストールします。
@@ -64,7 +80,9 @@ Bluesky からのデータ取得は `bluelog:aggregate` コマンドで行いま
 php artisan schedule:run
 ```
 
-`app/Console/Kernel.php` では毎時 `bluelog:aggregate` が実行されるように登録されています。
+`routes/console.php` では毎時 `bluelog:aggregate` が実行されるように登録されています。
+
+Docker 環境で定期実行させる場合は `scheduler` サービスが自動で `php artisan schedule:work` を実行します。コンテナを起動しておけばバッチ処理も継続して実行されます。
 
 ## ライセンス
 
