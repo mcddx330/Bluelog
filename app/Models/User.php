@@ -12,7 +12,7 @@ use Illuminate\Notifications\DatabaseNotificationCollection;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+
 
 /**
  * @property string                                                         $did
@@ -29,15 +29,13 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property Carbon|null                                                    $last_fetched_at
  * @property mixed                                                          $access_jwt
  * @property mixed                                                          $refresh_jwt
- * @property bool                                                           $is_early_adopter
  * @property bool                                                           $is_private
- * @property bool                                                           $invisible_badge
- * @property Carbon|null                                                    $created_at
- * @property Carbon|null                                                    $updated_at
  * @property bool                                                           $is_fetching
  * @property string|null                                                    $last_synced_post_cid
  * @property string|null                                                    $last_synced_like_cid
  * @property bool                                                           $is_admin
+ * @property Carbon|null                                                    $created_at
+ * @property Carbon|null                                                    $updated_at
  * @property-read Collection<int, DailyStat>                                $dailyStats
  * @property-read int|null                                                  $daily_stats_count
  * @property-read int                                                       $total_days_from_registered_bluesky
@@ -64,9 +62,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @method static Builder<static>|User whereFollowersCount($value)
  * @method static Builder<static>|User whereFollowingCount($value)
  * @method static Builder<static>|User whereHandle($value)
- * @method static Builder<static>|User whereInvisibleBadge($value)
  * @method static Builder<static>|User whereIsAdmin($value)
- * @method static Builder<static>|User whereIsEarlyAdopter($value)
  * @method static Builder<static>|User whereIsFetching($value)
  * @method static Builder<static>|User whereIsPrivate($value)
  * @method static Builder<static>|User whereLastFetchedAt($value)

@@ -46,7 +46,7 @@ class BlueskyLikesController extends BlueskyController {
             // データベースから指定されたDIDのユーザーの「いいね」レコードを取得します。
             // 新しいものから順に20件ずつページネーションします。
             $likes = \App\Models\Like::where('did', $did)
-                ->orderBy('created_at', 'desc')
+                ->orderBy('post_posted_at', 'desc')
                 ->paginate(20);
 
             $posts = [];

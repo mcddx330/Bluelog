@@ -29,6 +29,7 @@ return new class extends Migration {
 
             // リプライ／引用
             $table->string('reply_to', 255)->nullable()->index()->comment('リプライ先URI');
+            $table->string('reply_to_handle')->nullable()->comment('リプライ先のハンドル');
             $table->string('quote_of', 255)->nullable()->index()->comment('引用元URI');
 
             // フラグ
@@ -41,14 +42,11 @@ return new class extends Migration {
 
             // タイムスタンプ
             $table->dateTime('posted_at')->nullable()->comment('投稿日時');
+            $table->date('posted_date_only')->storedAs('DATE(posted_at)')->nullable()->index();
             $table->dateTime('indexed_at')->nullable()->comment('インデックス日時');
 
-            // レコード作成・更新日時
-            $table->timestamps(); // created_at, updated_at
+            $table->timestamps();
 
-            // 必要に応じてインデックス
-            // $table->index('posted_at');
-            // $table->index('indexed_at');
         });
 
         if (Schema::getConnection()->getDriverName() === 'mysql') {

@@ -9,9 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
+
 /**
- * 
- *
  * @property string              $id
  * @property string              $invitation_code_id
  * @property string              $used_by_user_did

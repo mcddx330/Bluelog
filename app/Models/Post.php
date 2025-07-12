@@ -11,9 +11,8 @@ use App\Models\Traits\HasDatabaseSpecificQueries;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 
+
 /**
- * 
- *
  * @property string                        $id
  * @property string                        $did
  * @property string                        $uri
@@ -21,17 +20,17 @@ use Illuminate\Support\Carbon;
  * @property string                        $rkey
  * @property string|null                   $text
  * @property string|null                   $reply_to
+ * @property string|null                   $reply_to_handle
  * @property string|null                   $quote_of
  * @property bool                          $is_repost
  * @property int                           $likes_count
  * @property int                           $replies_count
  * @property int                           $reposts_count
  * @property Carbon|null                   $posted_at
+ * @property string|null                   $posted_date_only
  * @property Carbon|null                   $indexed_at
  * @property Carbon|null                   $created_at
  * @property Carbon|null                   $updated_at
- * @property string|null                   $reply_to_handle
- * @property string|null                   $posted_date_only
  * @property-read Collection<int, Hashtag> $hashtags
  * @property-read int|null                 $hashtags_count
  * @property-read Collection<int, Media>   $media

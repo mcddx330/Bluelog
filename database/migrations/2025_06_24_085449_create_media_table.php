@@ -30,11 +30,7 @@ return new class extends Migration {
             $table->unsignedInteger('aspect_ratio_width')->nullable()->comment('アスペクト比（幅）');
             $table->unsignedInteger('aspect_ratio_height')->nullable()->comment('アスペクト比（高さ）');
 
-            // レコード作成・更新日時
-            $table->timestamps(); // created_at, updated_at
-
-            // 必要に応じてインデックス
-            // $table->index('type');
+            $table->timestamps();
         });
     }
 

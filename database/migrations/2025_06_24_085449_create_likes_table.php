@@ -22,14 +22,11 @@ return new class extends Migration {
 
             // いいね情報
             $table->string('post_uri', 255)->index()->comment('いいねしたポストのURI');
+            $table->string('cid', 255)->index()->nullable()->comment('コンテンツID');
+            $table->timestamp('post_posted_at')->comment('ポスト投稿日時');
             $table->string('created_by_did', 255)->index()->comment('ポスト作成者のDID');
 
-            // レコード作成・更新日時
-            $table->timestamps(); // created_at, updated_at
-
-            // 必要に応じてインデックス
-            // $table->index('post_uri');
-            // $table->index('created_by');
+            $table->timestamps();
         });
     }
 

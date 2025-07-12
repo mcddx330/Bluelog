@@ -11,9 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
+
 /**
- * 
- *
  * @property string                                    $id
  * @property string                                    $code
  * @property string                                    $issued_by_user_did

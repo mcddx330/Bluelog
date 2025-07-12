@@ -29,8 +29,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('reposts_count')->default(0)->comment('その日のリポスト数');
             $table->unsignedBigInteger('replies_count')->default(0)->comment('その日のリプライ数');
 
-            // レコード作成・更新日時
-            $table->timestamps(); // created_at, updated_at
+            $table->timestamps();
 
             // ユニーク制約
             $table->unique(['did', 'date']);

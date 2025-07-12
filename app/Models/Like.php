@@ -8,17 +8,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
+
 /**
- * 
- *
  * @property string      $id
  * @property string      $did
  * @property string      $post_uri
+ * @property string|null $cid
+ * @property string      $post_posted_at
  * @property string      $created_by_did
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property string|null $cid
- * @property string|null $post_posted_at
  * @property-read User   $user
  * @method static Builder<static>|Like newModelQuery()
  * @method static Builder<static>|Like newQuery()

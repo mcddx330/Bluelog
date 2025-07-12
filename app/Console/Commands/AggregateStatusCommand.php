@@ -360,7 +360,7 @@ class AggregateStatusCommand extends Command {
                         'uri'            => $item['uri'],
                         'created_by_did' => $creator_did,
                         'post_uri'       => $subject['uri'],
-                        'created_at'     => $created_at,
+                        'post_posted_at' => $created_at,
                     ]
                 );
                 if (!isset($daily_data[$created_at->format('Y-m-d')])) {

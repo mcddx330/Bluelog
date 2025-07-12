@@ -42,17 +42,15 @@ return new class extends Migration {
             $table->text('access_jwt')->comment('アクセストークン');
             $table->text('refresh_jwt')->comment('リフレッシュトークン');
 
-            // 早期採用者フラグ
-            $table->boolean('is_early_adopter')->default(false)->comment('早期採用者フラグ');
-
-            // 設定
+            // 設定類
             $table->boolean('is_private')->index()->default(false)->comment('非公開フラグ');
-
-            // 不可視バッジフラグ
-            $table->boolean('invisible_badge')->default(false)->comment('不可視バッジフラグ');
+            $table->boolean('is_fetching')->default(false)->comment('データ取得中フラグ');
+            $table->string('last_synced_post_cid', 255)->nullable()->comment('最後に同期した投稿のCID');
+            $table->string('last_synced_like_cid', 255)->nullable()->comment('最後に同期したいのCID');
+            $table->boolean('is_admin')->default(false)->comment('管理者フラグ');
 
             // Laravel標準の作成・更新日時
-            $table->timestamps(); // created_at, updated_at
+            $table->timestamps();
         });
     }
 
