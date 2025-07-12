@@ -18,7 +18,7 @@ use Revolution\Bluesky\Session\LegacySession;
 use App\Models\Media;
 
 class AggregateStatusCommand extends Command {
-    protected $signature = 'status:aggregate
+    protected $signature = 'bluelog:aggregate
         {--did= : 集計対象ユーザーのDID (オプション)}
         {--full-sync : 既存のカーソルを無視して、強制的に全件同期を実行します}
         {--force : --full-sync 使用時に確認プロンプトを表示しません}
