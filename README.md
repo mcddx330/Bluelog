@@ -80,7 +80,9 @@ Bluesky からのデータ取得は `bluelog:aggregate` コマンドで行いま
 php artisan schedule:run
 ```
 
-`app/Console/Kernel.php` では毎時 `bluelog:aggregate` が実行されるように登録されています。
+`routes/console.php` では毎時 `bluelog:aggregate` が実行されるように登録されています。
+
+Docker 環境で定期実行させる場合は `scheduler` サービスが自動で `php artisan schedule:work` を実行します。コンテナを起動しておけばバッチ処理も継続して実行されます。
 
 Docker 環境で定期実行させる場合は `scheduler` サービスが自動で `php artisan schedule:work` を実行します。コンテナを起動しておけばバッチ処理も継続して実行されます。
 
