@@ -1,66 +1,71 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# BlueLog
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+BlueLog は、Bluesky ユーザーの投稿や「いいね」を収集し、時系列に閲覧できるようにする Laravel 製アプリケーションです。自分の環境にインストールしてセルフホスティングすることを想定しています。
 
-## About Laravel
+## 主な機能
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Bluesky アカウントでログインし、投稿や「いいね」をデータベースに保存
+- 投稿検索、日付アーカイブ、並び替え表示
+- リプライランキング、ハッシュタグランキングの表示
+- 投稿データの CSV エクスポート
+- アカウント削除時は関連データをすべて自動削除
+- 招待コード制によるユーザー登録制御
+- 管理者向け設定画面（全体設定、招待コード管理 など）
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 動作環境
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.2 以上
+- Node.js 18 以上
+- SQLite3 (開発用デフォルト)
 
-## Learning Laravel
+## セットアップ手順
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+1. リポジトリをクローンし依存パッケージをインストールします。
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+   ```bash
+   composer install
+   npm install
+   ```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+2. `.env` を準備します。Laravel の `.env.example` を参考に必要な環境変数を設定してください。主に以下を設定します。
 
-## Laravel Sponsors
+   - `APP_KEY`： `php artisan key:generate` で生成
+   - `DB_CONNECTION=sqlite`
+   - `DB_DATABASE=database/database.sqlite`
+   - Bluesky 用の `BLUESKY_IDENTIFIER`, `BLUESKY_PASSWORD` など
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+3. データベースファイルを作成しマイグレーションを実行します。
 
-### Premium Partners
+   ```bash
+   touch database/database.sqlite
+   php artisan migrate
+   ```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+4. 開発サーバーを起動します。
 
-## Contributing
+   ```bash
+   npm run dev
+   ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+   `npm run dev` には Laravel 開発サーバー、キューワーカー、ログ監視、Vite がまとめて起動するスクリプトが登録されています。
 
-## Code of Conduct
+## 使い方
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+1. Web ブラウザで `http://localhost:8000` にアクセスします。
+2. Bluesky のハンドルとアプリパスワードでログインします。
+3. 初回ログイン時に投稿と「いいね」の取得ジョブが自動実行されます。
+4. プロフィールページでは検索・アーカイブ・並び替えが可能です。設定画面からデータ再取得やエクスポート、招待コード管理などを行えます。
 
-## Security Vulnerabilities
+## データ同期
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Bluesky からのデータ取得は `bluelog:aggregate` コマンドで行います。キューワーカーが実行中であれば自動的にバックグラウンド処理されます。定期的な同期を行う場合は cron などで以下を設定してください。
 
-## License
+```bash
+php artisan schedule:run
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+`app/Console/Kernel.php` では毎時 `bluelog:aggregate` が実行されるように登録されています。
+
+## ライセンス
+
+本ソフトウェアは MIT ライセンスで配布されます。
