@@ -69,17 +69,6 @@
 | `created_at`         | `timestamp` | レコード作成日時 (招待コードが使用された日時)。                     |
 | `updated_at`         | `timestamp` | レコード更新日時。                                     |
 
-### `patrons` テーブル定義 (新規)
-パトロンとして登録されたBlueskyユーザーのハンドルとDIDを管理するためのテーブル。
-
-| カラム名         | 型             | 説明                                             |
-|--------------|---------------|------------------------------------------------|
-| `id`         | `bigint` (PK) | パトロンレコードのID。自動増分。                              |
-| `handle`     | `string`      | パトロンのBlueskyハンドル (@username)。CSVから読み込む情報。ユニーク。 |
-| `user_did`   | `string`      | パトロンのBluesky DID。`users`テーブルの`did`への外部キー。ユニーク。 |
-| `created_at` | `timestamp`   | レコード作成日時。                                      |
-| `updated_at` | `timestamp`   | レコード更新日時。                                      |
-
 ### `posts` テーブル定義
 
 | カラム名               | 型                    | 説明                              |
@@ -532,61 +521,3 @@ Bluelogの投稿削除機能は、認証済みユーザーが自身のBluesky DI
     }
     ```
 *   **ビュー層**: ビュー（`resources/views/components/profile-main-content.blade.php`）は、`$profile`オブジェクトからこれらの属性を参照することで、リアルタイムカウントを表示します。
-
-### 4.12. ユーザーのステータス判定
-
-Bluelogでは、ユーザーの特性をより詳細に把握し、それに応じた機能や表示を提供するため、以下の2つの主要なフラグとリレーションを用いてユーザーのステータスを判定します。
-
-1.  **早期採用者 (`is_early_adopter` フラグ)**:
-    *   **定義**: `users` テーブルの `is_early_adopter` カラム (`boolean`) で管理されます。招待コードを使用してBluelogに登録したユーザーに `true` が設定されます。
-    *   **目的**: サービス初期からの貢献者を識別し、特別なバッジ表示などの特典を提供します。
-
-2.  **パトロン (`patrons` テーブルとのリレーション)**:
-    *   **定義**: 新しく導入される `patrons` テーブルにユーザーのDIDが存在するかどうかで判定されます。`users` モデルから `patrons` モデルへのリレーション（例: `hasOne`）を通じて確認されます。
-    *   **目的**: サービスを支援するパトロンユーザーを識別し、パトロン限定機能や表示を提供します。
-
-#### ステータス判定ロジック
-
-これらの情報源を組み合わせることで、`User` モデルに以下のようなステータス判定ロジックを実装し、アプリケーション全体で一貫したユーザー特性の識別を可能にします。
-
-```php
-class User extends Authenticatable
-{
-    // ...
-
-    /**
-     * Get the user's account status.
-     */
-    public function getAccountStatusAttribute(): UserAccountStatus
-    {
-        $is_early_adopter = $this->is_early_adopter;
-        $is_patron = $this->patron()->exists();
-
-        switch (true) {
-            case $is_early_adopter && $is_patron:
-                return UserAccountStatus::EarlyAdopterAndPatron;
-            case $is_early_adopter:
-                return UserAccountStatus::EarlyAdopter;
-            case $is_patron:
-                return UserAccountStatus::Patron;
-            default:
-                return UserAccountStatus::Normal;
-        }
-    }
-
-    // ...
-}
-```
-
-| `is_early_adopter` | `patrons` テーブルに存在 | `invisible_badge` | 判定されるステータス                 | 結果 (バッジ表示) | 説明                      |
-|--------------------|-------------------|-------------------|----------------------------|------------|-------------------------|
-| ✅                  | ✅                 | ❌                 | `early_adopter_and_patron` | 表示あり ✅     | 早期採用者であり、かつパトロンであるユーザー。 |
-| ✅                  | ❌                 | ❌                 | `early_adopter`            | 表示あり ✅     | 早期採用者であるが、パトロンではないユーザー。 |
-| ❌                  | ✅                 | ❌                 | `patron`                   | 表示あり ✅     | 早期採用者ではないが、パトロンであるユーザー。 |
-| ❌                  | ❌                 | ❌                 | `normal`                   | 表示なし ❌     | 早期採用者でもパトロンでもない通常のユーザー。 |
-| ✅                  | ✅                 | ✅                 | `early_adopter_and_patron` | 表示なし ❌     | 早期採用者であり、かつパトロンであるユーザー。 |
-| ✅                  | ❌                 | ✅                 | `early_adopter`            | 表示なし ❌     | 早期採用者であるが、パトロンではないユーザー。 |
-| ❌                  | ✅                 | ✅                 | `patron`                   | 表示なし ❌     | 早期採用者ではないが、パトロンであるユーザー。 |
-| ❌                  | ❌                 | ✅                 | `normal`                   | 表示なし ❌     | 早期採用者でもパトロンでもない通常のユーザー。 |
-
-この判定ロジックは、`User` モデルのアクセサ（例: `getAccountStatusAttribute()`）として実装することで、`$user->account_status` のように簡潔にユーザーのステータスを取得できるようになります。ビューでは、`$user->invisible_badge` の値に基づいてバッジの表示/非表示を制御します。これにより、ビューやコントローラーなど、アプリケーションの様々な場所でユーザーの特性に応じた処理を柔軟に記述できます。

@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 
 /**
+ * 
+ *
  * @property string                        $id
  * @property string                        $did
  * @property string                        $uri

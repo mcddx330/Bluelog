@@ -10,6 +10,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
+ * 
+ *
  * @property string      $id
  * @property string      $post_cid
  * @property string      $type

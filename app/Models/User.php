@@ -15,30 +15,29 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
- *
- *
- * @property string $did
- * @property string $handle
- * @property string|null $display_name
- * @property string|null $description
- * @property string|null $avatar_url
- * @property string|null $banner_url
- * @property int $followers_count
- * @property int $following_count
- * @property Carbon $registered_at
- * @property Carbon $last_login_at
- * @property Carbon|null $last_fetched_at
- * @property mixed $access_jwt
+ * @property string                                                         $did
+ * @property string                                                         $handle
+ * @property string|null                                                    $display_name
+ * @property string|null                                                    $description
+ * @property string|null                                                    $avatar_url
+ * @property string|null                                                    $banner_url
+ * @property int                                                            $followers_count
+ * @property int                                                            $following_count
+ * @property-read int|null                                                  $posts_count
+ * @property Carbon                                                         $registered_at
+ * @property Carbon                                                         $last_login_at
+ * @property Carbon|null                                                    $last_fetched_at
+ * @property mixed                                                          $access_jwt
  * @property mixed                                                          $refresh_jwt
+ * @property bool                                                           $is_early_adopter
  * @property bool                                                           $is_private
+ * @property bool                                                           $invisible_badge
  * @property Carbon|null                                                    $created_at
  * @property Carbon|null                                                    $updated_at
  * @property bool                                                           $is_fetching
  * @property string|null                                                    $last_synced_post_cid
  * @property string|null                                                    $last_synced_like_cid
- * @property bool                                                           $is_early_adopter
- * @property bool                                                           $invisible_badge
- * @property int                                                            $is_admin
+ * @property bool                                                           $is_admin
  * @property-read Collection<int, DailyStat>                                $dailyStats
  * @property-read int|null                                                  $daily_stats_count
  * @property-read int                                                       $total_days_from_registered_bluesky
@@ -48,9 +47,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read int|null                                                  $likes_count
  * @property-read DatabaseNotificationCollection<int, DatabaseNotification> $notifications
  * @property-read int|null                                                  $notifications_count
- * @property-read Patron|null                                               $patron
  * @property-read Collection<int, Post>                                     $posts
- * @property-read int|null                                                  $posts_count
  * @property-read Collection<int, InvitationCodeUsage>                      $usedInvitationCodes
  * @property-read int|null                                                  $used_invitation_codes_count
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
@@ -76,6 +73,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @method static Builder<static>|User whereLastLoginAt($value)
  * @method static Builder<static>|User whereLastSyncedLikeCid($value)
  * @method static Builder<static>|User whereLastSyncedPostCid($value)
+ * @method static Builder<static>|User wherePostsCount($value)
  * @method static Builder<static>|User whereRefreshJwt($value)
  * @method static Builder<static>|User whereRegisteredAt($value)
  * @method static Builder<static>|User whereUpdatedAt($value)
@@ -83,13 +81,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  */
 class User extends Authenticatable {
     use HasFactory, Notifiable;
-
-    /**
-     * Get the patron record associated with the user.
-     */
-    public function patron(): HasOne {
-        return $this->hasOne(Patron::class, 'user_did', 'did');
-    }
 
     /**
      * このモデルに関連付けられているテーブル名。

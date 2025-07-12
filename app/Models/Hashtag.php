@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
+ * 
+ *
  * @property string      $id
  * @property string      $post_id
  * @property string      $tag
