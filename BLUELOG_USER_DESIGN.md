@@ -38,10 +38,9 @@
 | `is_fetching`          | `boolean`     | データ取得中フラグ (デフォルト: `false`)                                         |
 | `is_early_adopter`     | `boolean`     | 招待コードを使用して登録した早期採用者であるかを示すフラグ (デフォルト: `false`)                     |
 | `invisible_badge`      | `boolean`     | アカウントステータスバッジの非表示フラグ (デフォルト: `false`)                              |
+| `is_admin`             | `boolean`     | 管理者権限を持つかどうかを示すフラグ (デフォルト: `false`)                                   |
 | `created_at`           | `timestamp`   | レコード作成日時。                                                          |
 | `updated_at`           | `timestamp`   | レコード更新日時。                                                          |
-| `is_early_adopter`     | `boolean`     | 招待コードを使用して登録した早期採用者であるかを示すフラグ (デフォルト: `false`)                     |
-| `invisible_badge`      | `boolean`     | アカウントステータスバッジの非表示フラグ (デフォルト: `false`)                              |
 
 ### `invitation_codes` テーブル定義 (新規)
 招待コードの管理と複数回利用を可能にするためのテーブル。

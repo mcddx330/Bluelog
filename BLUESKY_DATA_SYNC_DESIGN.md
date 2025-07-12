@@ -73,14 +73,7 @@ Schema::table('users', function (Blueprint $table) {
 });
 ```
 
-**現状と今後の課題:**
-
-上記のマイグレーションは設計段階で提案されたものですが、現在の実装では `users` テーブルに `post_fetch_cursor` および `like_fetch_cursor` カラムは追加されていません。データ同期の効率化のためにはこれらのカーソルを永続化し、差分更新に利用することが不可欠です。
-
-**今後の対応:**
-
-*   `post_fetch_cursor` および `like_fetch_cursor` カラムを `users` テーブルに追加するマイグレーションを実行する。
-*   `AggregateStatusCommand` 内でこれらのカーソルを適切に利用し、Bluesky APIからのデータ取得時に差分更新ロジックを実装する。
+このマイグレーションにより `last_synced_post_cid` と `last_synced_like_cid` の二つのカラムが追加されました。これらは `AggregateStatusCommand` において、Bluesky API との同期処理で取得済みの位置を記録するために使用されています。差分取得時にはこれらの値を基準とし、効率的なデータ更新を実現しています。
 
 ### 4.2. データ同期処理の実装
 
